@@ -1,0 +1,61 @@
+# Every hour: seal SMT World's newest public snapshot on Monad testnet, grade batches whose
+# horizon has passed, expire the ones nobody graded in time. The key lives only in the
+# `monad-testnet` environment secret KEEPER_PRIVATE_KEY; without it the run is a dry run.
+name: keeper
+on:
+  schedule:
+    - cron: "17 * * * *" # SMT World publishes at about :10
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Build every transaction but send none
+        type: boolean
+        default: false
+permissions:
+  contents: write # push the archived snapshot to the `archive` branch
+concurrency:
+  group: keeper
+  cancel-in-progress: false
+jobs:
+  keep:
+    runs-on: ubuntu-latest
+    environment: monad-testnet
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx hardhat compile
+      - name: Keeper
+        env:
+          KEEPER_PRIVATE_KEY: ${{ secrets.KEEPER_PRIVATE_KEY }}
+          MONAD_RPC_URL: ${{ vars.MONAD_RPC_URL }}
+          HORIZON_SECONDS: ${{ vars.HORIZON_SECONDS }}
+          SEAL_EVERY_MIN: ${{ vars.SEAL_EVERY_MIN }}
+          MIN_BALANCE_MON: ${{ vars.MIN_BALANCE_MON }}
+          ARCHIVE_DIR: ${{ github.workspace }}/archive-out
+        run: |
+          if [ -z "$KEEPER_PRIVATE_KEY" ]; then echo "::warning::KEEPER_PRIVATE_KEY is not set in the monad-testnet environment: dry run, nothing sealed"; fi
+          if [ "${{ inputs.dry_run }}" = "true" ]; then node keeper/keeper.js --dry-run; else node keeper/keeper.js; fi
+      - name: Archive the sealed snapshots (archive branch)
+        if: always()
+        run: |
+          [ -d archive-out/batches ] && [ -n "$(ls -A archive-out/batches)" ] || { echo "nothing to archive"; exit 0; }
+          git config user.name "smt-receipts-keeper"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin archive >/dev/null; then
+            git fetch --depth 1 origin archive
+            git worktree add ../archive origin/archive
+            git -C ../archive checkout -B archive
+          else
+            git worktree add --detach ../archive
+            git -C ../archive checkout --orphan archive
+            git -C ../archive rm -rf --quiet . || true
+            printf '# SMT Receipts archive\n\nThe exact SMT World snapshot each batch sealed, written by the keeper.\n`keccak256(source.raw)` equals the batch'"'"'s on-chain snapshotHash; each receipt'"'"'s `canonical` hashes to its reasonHash.\n' > ../archive/README.md
+          fi
+          mkdir -p ../archive/batches
+          cp archive-out/batches/*.json ../archive/batches/
+          git -C ../archive add -A
+          git -C ../archive commit -m "archive: batch $(ls archive-out/batches | sed 's/.json//' | tr '\n' ' ')" || exit 0
+          git -C ../archive push origin archive

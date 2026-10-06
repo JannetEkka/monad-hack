@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=./node_modules/envio/evm.schema.json
+# SMT Receipts on Monad testnet. The address is the contract's CREATE2 address: it is fixed by
+# the compiled code, so it is known before deployment (a test checks it matches the artifact).
+name: smt-receipts
+description: SMT Receipts - a trading agent's calls sealed on Monad and graded by RedStone-signed prices
+disable_default_cross_chain: true
+# every handler records the transaction it came from, so the page can link it
+field_selection:
+  transaction_fields:
+    - hash
+contracts:
+  - name: SMTReceipts
+    events:
+      - event: AgentRegistered(uint256 indexed agentId, address indexed publisher, string name, string source, uint16 feeBps, bytes32[] feeds)
+      - event: Sealed(uint256 indexed batchId, uint256 indexed agentId, uint64 sourceTs, bytes32 snapshotHash, uint64 entryTs, uint64 exitTs, uint256 calls, bytes32[] reasonHashes, string[] whys)
+      - event: Graded(uint256 indexed batchId, uint256 indexed agentId, uint8[] feedIndex, uint256[] entryPrice, uint256[] exitPrice, int32[] movePpm, int32[] netPpm, uint8 hits)
+      - event: Expired(uint256 indexed batchId, uint256 indexed agentId, uint8 missed)
+chains:
+  - id: 10143
+    start_block: 68750000
+    contracts:
+      - name: SMTReceipts
+        address:
+          - "0xDF9f42AE4f81F086F8495c5a5339dDaa90057993"

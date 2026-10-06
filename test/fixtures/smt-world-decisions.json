@@ -1,0 +1,343 @@
+{
+  "ADA": {
+    "action": "WAIT",
+    "as_of": "2026-10-06T17:10:44.773432+00:00",
+    "attributed": true,
+    "conf": 0.1985,
+    "drivers": [
+      "flow",
+      "sentiment"
+    ],
+    "votes": {
+      "catalyst": [
+        "NEUTRAL",
+        0.0,
+        "no catalyst feed for this pair"
+      ],
+      "flow": [
+        "SHORT",
+        0.4429,
+        "flow_signal SHORT 44% [weex+binance imb=-0.116]"
+      ],
+      "flows": [
+        "LONG",
+        0.1762,
+        "flows LONG: whale L18% \u00b7 onchain n/a"
+      ],
+      "regime": [
+        "NEUTRAL",
+        0.0,
+        "regime has NO learned cells at all \u2014 it CANNOT vote a direction on any pair (F-282), and F-447 measured this as a LEARNED SILENCE over 6.6 years rather than a pending one; its weight still counts (F-424), the quorum number no longer pretends it spoke"
+      ],
+      "sentiment": [
+        "SHORT",
+        0.6,
+        "As a contra pair, the recent media-driven euphoria around 'parabolic runs' ([10-06 07:38Z]) and high funding rates signal a local top; shorting the sentiment."
+      ],
+      "technical": [
+        "LONG",
+        0.5623,
+        "state-read: price 0.2723 > 200MA 0.2308, ADX 30.7 > 30.0, 0.89 of the 30d range (gate 0.75)"
+      ]
+    },
+    "why": "My committee is sitting out ADA at 20% conviction \u2014 advisory; my written setups decide the trades. Flow and Sentiment leaned short, but no one else lined up \u2014 not enough to agree on a side. The committee sees nothing worth the fee drag yet \u2014 a position open here follows its own setup's exit rule, not this vote."
+  },
+  "BNB": {
+    "action": "WAIT",
+    "as_of": "2026-10-06T17:10:44.773405+00:00",
+    "attributed": true,
+    "conf": 0.4579,
+    "drivers": [
+      "flow",
+      "sentiment"
+    ],
+    "votes": {
+      "catalyst": [
+        "NEUTRAL",
+        0.0,
+        "no catalyst feed for this pair"
+      ],
+      "flow": [
+        "SHORT",
+        0.4897,
+        "flow_signal SHORT 49% [weex+binance imb=-0.175]"
+      ],
+      "flows": [
+        "NEUTRAL",
+        0.0,
+        "flows has no input \u2014 whale: no whale flow \u2014 watchlist: ANSWERED, no directional read \u00b7 aggTrades: present but UNUSABLE (no net_usd, or a window too far from 900s to scale); onchain: no onchain input (no flow row for this pair)"
+      ],
+      "regime": [
+        "NEUTRAL",
+        0.0,
+        "regime has NO learned cells at all \u2014 it CANNOT vote a direction on any pair (F-282), and F-447 measured this as a LEARNED SILENCE over 6.6 years rather than a pending one; its weight still counts (F-424), the quorum number no longer pretends it spoke"
+      ],
+      "sentiment": [
+        "SHORT",
+        0.6,
+        "Market tape indicates a building negative trend (CVD_slope -212.796) and sellers stepping into resistance as noted at [10-05 19:03Z]."
+      ],
+      "technical": [
+        "NEUTRAL",
+        0.0,
+        "RSI 50.7 between the learned bars, and no learned momentum cell clears in ranging tape (3-bar -0.65%)"
+      ]
+    },
+    "why": "My committee is sitting out BNB at 46% conviction \u2014 advisory; my written setups decide the trades. Flow and Sentiment leaned short, but no one else lined up \u2014 not enough to agree on a side. The committee sees nothing worth the fee drag yet \u2014 a position open here follows its own setup's exit rule, not this vote."
+  },
+  "BTC": {
+    "action": "WAIT",
+    "as_of": "2026-10-06T17:10:44.773385+00:00",
+    "attributed": true,
+    "conf": 0.3643,
+    "drivers": [
+      "flow",
+      "flows"
+    ],
+    "votes": {
+      "catalyst": [
+        "NEUTRAL",
+        0.0,
+        "no catalyst feed for this pair"
+      ],
+      "flow": [
+        "SHORT",
+        0.6601,
+        "flow_signal SHORT 66% [weex+binance imb=-0.388]"
+      ],
+      "flows": [
+        "SHORT",
+        0.0805,
+        "flows SHORT: whale S20% \u00b7 onchain L4% (members disagree \u2014 netted, not doubled)"
+      ],
+      "regime": [
+        "NEUTRAL",
+        0.0,
+        "regime has NO learned cells at all \u2014 it CANNOT vote a direction on any pair (F-282), and F-447 measured this as a LEARNED SILENCE over 6.6 years rather than a pending one; its weight still counts (F-424), the quorum number no longer pretends it spoke"
+      ],
+      "sentiment": [
+        "SHORT",
+        0.65,
+        "Recent exchange tape shows aggressive sell-side dominance (-0.2002 imbalance) compounded by ETF outflows reported at [10-06 13:42Z]."
+      ],
+      "technical": [
+        "NEUTRAL",
+        0.0,
+        "RSI 51.7 between the learned bars, and no learned momentum cell clears in ranging tape (3-bar -1.14%)"
+      ]
+    },
+    "why": "My committee is sitting out BTC at 36% conviction \u2014 advisory; my written setups decide the trades. Flow and Flows leaned short, but no one else lined up \u2014 not enough to agree on a side. The committee sees nothing worth the fee drag yet \u2014 a position open here follows its own setup's exit rule, not this vote."
+  },
+  "DOGE": {
+    "action": "WAIT",
+    "as_of": "2026-10-06T17:10:44.773439+00:00",
+    "attributed": true,
+    "conf": 0.0571,
+    "drivers": [
+      "flows",
+      "sentiment"
+    ],
+    "votes": {
+      "catalyst": [
+        "NEUTRAL",
+        0.0,
+        "no catalyst feed for this pair"
+      ],
+      "flow": [
+        "NEUTRAL",
+        0.0,
+        "order book is BALANCED \u2014 no lean to trade [weex+binance imb=-0.035]"
+      ],
+      "flows": [
+        "SHORT",
+        0.3128,
+        "flows SHORT: whale S31% \u00b7 onchain n/a"
+      ],
+      "regime": [
+        "NEUTRAL",
+        0.0,
+        "regime has NO learned cells at all \u2014 it CANNOT vote a direction on any pair (F-282), and F-447 measured this as a LEARNED SILENCE over 6.6 years rather than a pending one; its weight still counts (F-424), the quorum number no longer pretends it spoke"
+      ],
+      "sentiment": [
+        "SHORT",
+        0.6,
+        "As a contra pair, bullish chart pattern headlines ([10-06 07:18Z]) combined with a negative tape imbalance (-0.2015) justify a short against the retail crowd sentiment."
+      ],
+      "technical": [
+        "NEUTRAL",
+        0.0,
+        "RSI 55.3 between the learned bars, and no learned momentum cell clears in ranging tape (3-bar -1.30%)"
+      ]
+    },
+    "why": "My committee is sitting out DOGE at 6% conviction \u2014 advisory; my written setups decide the trades. Flows and Sentiment leaned short, but no one else lined up \u2014 not enough to agree on a side. The committee sees nothing worth the fee drag yet \u2014 a position open here follows its own setup's exit rule, not this vote."
+  },
+  "ETH": {
+    "action": "WAIT",
+    "as_of": "2026-10-06T17:10:44.773397+00:00",
+    "attributed": true,
+    "conf": 0.2227,
+    "drivers": [
+      "flows"
+    ],
+    "votes": {
+      "catalyst": [
+        "LONG",
+        0.5,
+        "catalyst news_event \u2192 LONG (conf 0.50 \u00d7 learned trust 1.00)"
+      ],
+      "flow": [
+        "SHORT",
+        0.4147,
+        "flow_signal SHORT 41% [weex+binance imb=-0.081]"
+      ],
+      "flows": [
+        "LONG",
+        0.3291,
+        "flows LONG: whale L72% \u00b7 onchain S6% (members disagree \u2014 netted, not doubled)"
+      ],
+      "regime": [
+        "NEUTRAL",
+        0.0,
+        "regime has NO learned cells at all \u2014 it CANNOT vote a direction on any pair (F-282), and F-447 measured this as a LEARNED SILENCE over 6.6 years rather than a pending one; its weight still counts (F-424), the quorum number no longer pretends it spoke"
+      ],
+      "sentiment": [
+        "NEUTRAL",
+        0.0,
+        "no sentiment input (Gemini and funding both dark)"
+      ],
+      "technical": [
+        "NEUTRAL",
+        0.0,
+        "RSI 49.2 between the learned bars, and no learned momentum cell clears in ranging tape (3-bar -0.89%)"
+      ]
+    },
+    "why": "My committee is sitting out ETH at 22% conviction \u2014 advisory; my written setups decide the trades. Flows leaned long, but no one else lined up \u2014 not enough to agree on a side. The committee sees nothing worth the fee drag yet \u2014 a position open here follows its own setup's exit rule, not this vote."
+  },
+  "LTC": {
+    "action": "SHORT",
+    "as_of": "2026-10-06T17:10:44.773412+00:00",
+    "attributed": true,
+    "conf": 0.5469,
+    "drivers": [
+      "flow"
+    ],
+    "votes": {
+      "catalyst": [
+        "NEUTRAL",
+        0.0,
+        "no catalyst feed for this pair"
+      ],
+      "flow": [
+        "SHORT",
+        0.5869,
+        "flow_signal SHORT 59% [weex+binance imb=-0.296]"
+      ],
+      "flows": [
+        "NEUTRAL",
+        0.0,
+        "flows has no input \u2014 whale: no whale flow \u2014 watchlist: ANSWERED, no directional read \u00b7 aggTrades: present but UNUSABLE (no net_usd, or a window too far from 900s to scale); onchain: onchain feed ANSWERED and read NEUTRAL \u2014 LTC US spot-ETF n"
+      ],
+      "regime": [
+        "NEUTRAL",
+        0.0,
+        "regime has NO learned cells at all \u2014 it CANNOT vote a direction on any pair (F-282), and F-447 measured this as a LEARNED SILENCE over 6.6 years rather than a pending one; its weight still counts (F-424), the quorum number no longer pretends it spoke"
+      ],
+      "sentiment": [
+        "LONG",
+        0.6,
+        "As a contra pair, the aggressive short-side exchange tape imbalance (-0.3245) signals local exhaustion, favoring a mean-reversion long."
+      ],
+      "technical": [
+        "NEUTRAL",
+        0.0,
+        "RSI 52.3 between the learned bars, and no learned momentum cell clears in ranging tape (3-bar -0.88%)"
+      ]
+    },
+    "why": "My committee leans SHORT on LTC at 55% conviction \u2014 advisory; my written setups decide the trades. Flow led the short call and owns it on a flip-test; the rest were too soft to credit. Sentiment leaned long, but it only gets a veto here \u2014 it trimmed conviction without flipping the call."
+  },
+  "SOL": {
+    "action": "WAIT",
+    "as_of": "2026-10-06T17:10:44.773419+00:00",
+    "attributed": true,
+    "conf": 0.315,
+    "drivers": [
+      "flow",
+      "flows"
+    ],
+    "votes": {
+      "catalyst": [
+        "NEUTRAL",
+        0.0,
+        "no catalyst feed for this pair"
+      ],
+      "flow": [
+        "SHORT",
+        0.4782,
+        "flow_signal SHORT 48% [weex+binance imb=-0.160]"
+      ],
+      "flows": [
+        "SHORT",
+        0.2719,
+        "flows SHORT: whale S27% \u00b7 onchain n/a"
+      ],
+      "regime": [
+        "NEUTRAL",
+        0.0,
+        "regime has NO learned cells at all \u2014 it CANNOT vote a direction on any pair (F-282), and F-447 measured this as a LEARNED SILENCE over 6.6 years rather than a pending one; its weight still counts (F-424), the quorum number no longer pretends it spoke"
+      ],
+      "sentiment": [
+        "LONG",
+        0.7,
+        "Strong fundamental momentum driven by the instant settlement program announcement at [10-06 07:42Z] aligns with positive recent tape imbalance."
+      ],
+      "technical": [
+        "NEUTRAL",
+        0.0,
+        "RSI 53.2 between the learned bars, and no learned momentum cell clears in ranging tape (3-bar -1.13%)"
+      ]
+    },
+    "why": "My committee is sitting out SOL at 31% conviction \u2014 advisory; my written setups decide the trades. Flow and Flows leaned short, but no one else lined up \u2014 not enough to agree on a side. The committee sees nothing worth the fee drag yet \u2014 a position open here follows its own setup's exit rule, not this vote."
+  },
+  "XRP": {
+    "action": "WAIT",
+    "as_of": "2026-10-06T17:10:44.773425+00:00",
+    "attributed": true,
+    "conf": 0.0142,
+    "drivers": [
+      "sentiment"
+    ],
+    "votes": {
+      "catalyst": [
+        "NEUTRAL",
+        0.0,
+        "no catalyst feed for this pair"
+      ],
+      "flow": [
+        "NEUTRAL",
+        0.0,
+        "order book is BALANCED \u2014 no lean to trade [weex+binance imb=+0.059]"
+      ],
+      "flows": [
+        "LONG",
+        0.2124,
+        "flows LONG: whale L21% \u00b7 onchain n/a"
+      ],
+      "regime": [
+        "NEUTRAL",
+        0.0,
+        "regime has NO learned cells at all \u2014 it CANNOT vote a direction on any pair (F-282), and F-447 measured this as a LEARNED SILENCE over 6.6 years rather than a pending one; its weight still counts (F-424), the quorum number no longer pretends it spoke"
+      ],
+      "sentiment": [
+        "SHORT",
+        0.6,
+        "The combination of negative tape imbalance (-0.5398) and news regarding the lack of an XRP ETF ([10-06 10:11Z]) outweighs institutional interest in the OKX valuation."
+      ],
+      "technical": [
+        "NEUTRAL",
+        0.0,
+        "RSI 53.7 between the learned bars, and no learned momentum cell clears in ranging tape (3-bar -1.34%)"
+      ]
+    },
+    "why": "My committee is sitting out XRP at 1% conviction \u2014 advisory; my written setups decide the trades. Sentiment leaned short, but no one else lined up \u2014 not enough to agree on a side. The committee sees nothing worth the fee drag yet \u2014 a position open here follows its own setup's exit rule, not this vote."
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "smt-receipts-indexer",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Envio HyperIndex indexer for SMT Receipts on Monad testnet",
+  "scripts": {
+    "codegen": "envio codegen",
+    "dev": "envio dev",
+    "start": "envio start",
+    "test": "vitest run --test-timeout=20000"
+  },
+  "devDependencies": {
+    "@types/node": "24.12.2",
+    "typescript": "6.0.3",
+    "vitest": "4.1.0"
+  },
+  "dependencies": {
+    "envio": "3.14.0"
+  },
+  "engines": {
+    "node": ">=22.15.0"
+  }
+}

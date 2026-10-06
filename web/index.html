@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SMT Receipts</title>
+  <meta name="description" content="An AI trading bot's calls, sealed on Monad before the market moves and graded later by RedStone-signed prices. Nobody can edit them." />
+  <link rel="icon" href="assets/smt_logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Manrope:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="#" aria-label="SMT Receipts home">
+      <img src="assets/smt_logo.png" alt="" width="36" height="36" />
+      <span>SMT <b>Receipts</b></span>
+    </a>
+    <nav>
+      <a href="#scoreboard">Scoreboard</a>
+      <a href="#feed">Receipts</a>
+      <a href="#how">How it works</a>
+    </nav>
+    <span id="source" class="pill" title="Where this page is reading from">connecting…</span>
+  </header>
+
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Monad testnet · RedStone-signed prices · no owner, no admin key</p>
+      <h1>Every call, sealed <em>before</em> the market moves.</h1>
+      <p class="lede">
+        SMT's AI committee publishes a call on eight coins every hour, with its reason in plain words.
+        This page writes each call to Monad <b>before its entry price exists</b>, then grades it four hours later
+        against prices RedStone's oracle signed at that exact second, checked by the contract itself.
+        WAITs are sealed too. Nobody can edit, delete or re-date a receipt. Not even us.
+      </p>
+      <div class="hero-links">
+        <a class="btn" href="#feed">See the receipts</a>
+        <a class="btn ghost" id="contractLink" href="#" target="_blank" rel="noopener">Contract on MonadVision ↗</a>
+      </div>
+    </section>
+
+    <div id="banner" class="banner" hidden></div>
+
+    <section id="scoreboard" class="block">
+      <div class="block-head">
+        <h2>Scoreboard</h2>
+        <p class="muted" id="scoreNote">A hit is a LONG or SHORT that beat the round-trip trading fee. An ungraded call counts as a miss.</p>
+      </div>
+      <div class="tiles" id="tiles">
+        <div class="tile skeleton"></div><div class="tile skeleton"></div><div class="tile skeleton"></div><div class="tile skeleton"></div><div class="tile skeleton"></div>
+      </div>
+      <div class="table-wrap">
+        <table class="pairs" id="pairs">
+          <thead><tr><th>Pair</th><th>Long</th><th>Short</th><th>Wait</th><th>Graded</th><th>Hits</th><th>Hit rate</th><th>Avg net</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="muted small" id="pairsNote"></p>
+    </section>
+
+    <section id="feed" class="block">
+      <div class="block-head">
+        <h2>Latest receipts</h2>
+        <p class="muted">One slip per hourly snapshot: all eight coins, in the order SMT registered them. Tap a line for its reason and its proof.</p>
+      </div>
+      <div class="slips" id="slips"></div>
+    </section>
+
+    <section id="how" class="block how">
+      <h2>How a receipt is made</h2>
+      <ol class="steps">
+        <li><span class="n">1</span><h3>Publish</h3><p>SMT's committee writes its call for each coin to SMT World's public feed: LONG, SHORT or WAIT, a conviction, and a three-sentence reason.</p></li>
+        <li><span class="n">2</span><h3>Seal</h3><p>A keeper seals the whole snapshot on Monad: every coin, WAITs included, plus the hash of each reason. The contract refuses an old, repeated or partial snapshot.</p></li>
+        <li><span class="n">3</span><h3>Price</h3><p>Entry is the first RedStone tick <i>after</i> the seal block. Exit is entry plus four hours. RedStone signs a price every 10 seconds; the contract checks three of its five signers itself.</p></li>
+        <li><span class="n">4</span><h3>Grade</h3><p>Anyone can submit the two signed prices. The contract computes the move, subtracts the fee and keeps score. A call nobody grades within 22 hours expires as a miss.</p></li>
+      </ol>
+      <div class="cant">
+        <h3>What can't be faked</h3>
+        <ul>
+          <li><b>Hindsight.</b> The entry price is signed after the call is on-chain.</li>
+          <li><b>Cherry-picking.</b> Every coin is sealed every time, and a call left ungraded counts against the bot.</li>
+          <li><b>The price.</b> The contract checks RedStone's signatures at the exact second. It never takes a number from us.</li>
+          <li><b>The reason.</b> Each call's reason is hashed into the seal. Tap "Verify" on any line to recompute it in your browser.</li>
+          <li><b>Edits.</b> There is no owner, no admin key and no upgrade path.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="detail" aria-labelledby="dTitle">
+    <form method="dialog"><button class="close" aria-label="Close">×</button></form>
+    <div id="detailBody"></div>
+  </dialog>
+
+  <footer class="foot">
+    <span>SMT Receipts — built for Monad Metropolis (Onchain Finance &amp; Trading).</span>
+    <span class="foot-links">
+      <a id="repoLink" href="#" target="_blank" rel="noopener">Code</a>
+      <a id="worldLink" href="#" target="_blank" rel="noopener">SMT World</a>
+      <a href="https://docs.redstone.finance" target="_blank" rel="noopener">RedStone</a>
+      <a href="https://envio.dev" target="_blank" rel="noopener">Envio</a>
+    </span>
+    <span class="muted small">Testnet only. Not financial advice: a public track record of a research bot.</span>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.4/ethers.umd.min.js" crossorigin="anonymous"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
