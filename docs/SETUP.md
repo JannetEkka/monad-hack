@@ -37,7 +37,7 @@ If the drip is small, set the repository **variable** (Settings → Secrets and 
 
 ## 4. GitHub Pages (30 s)
 
-**Settings → Pages → Build and deployment → Source: GitHub Actions.** The page then publishes at https://jannetekka.github.io/smt-receipts/ on every merge that touches `web/`.
+**Settings → Pages → Build and deployment → Source: GitHub Actions.** The page then publishes at https://jannetekka.github.io/monad-hack/ on every merge that touches `web/`.
 
 ## 5. Merge, then run the keeper once
 
@@ -54,8 +54,8 @@ A red run is never silent: `[ERROR]` says what failed; `[BUDGET]` means the wall
 
 ## 6. Envio (5 min, for the Envio bounty and the full per-pair scoreboard)
 
-1. https://envio.dev/app/login → log in with GitHub → install the *Envio Deployments* app on `smt-receipts`.
-2. **Add indexer**: repository `smt-receipts`, root directory `indexer`, config file `config.yaml`, branch `main`.
+1. https://envio.dev/app/login → log in with GitHub → install the *Envio Deployments* app on `monad-hack`.
+2. **Add indexer**: repository `monad-hack`, root directory `indexer`, config file `config.yaml`, branch `main`.
 3. When the deployment is green, copy its GraphQL URL and put it in `web/config.js` → `envioGraphql` (or send it to Claude, who opens a one-line PR). Until then the page reads the contract directly and its header says so.
 
 The free Development plan lasts 30 days and 100,000 events; this indexer uses a few hundred a day.

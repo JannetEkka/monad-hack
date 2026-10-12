@@ -9,8 +9,8 @@ window.SMT_RECEIPTS = {
   // Envio Cloud GraphQL endpoint. Empty = read the chain directly (the page says so).
   // A ?envio=<url> query parameter overrides it.
   envioGraphql: "",
-  archive: "https://raw.githubusercontent.com/JannetEkka/smt-receipts/archive/batches/",
-  repo: "https://github.com/JannetEkka/smt-receipts",
+  archive: "https://raw.githubusercontent.com/JannetEkka/monad-hack/archive/batches/",
+  repo: "https://github.com/JannetEkka/monad-hack",
   smtWorld: "https://smt-weex-trading-bot.jannet-ekka.workers.dev/",
   pairs: ["BTC", "ETH", "SOL", "BNB", "XRP", "DOGE", "LTC", "ADA"],
   recent: 24,

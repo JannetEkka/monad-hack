@@ -6,7 +6,7 @@ Built for [Monad Metropolis](https://monad.xyz/metropolis), track **Onchain Fina
 
 | | |
 |---|---|
-| Live page | https://jannetekka.github.io/smt-receipts/ |
+| Live page | https://jannetekka.github.io/monad-hack/ |
 | Contract (Monad testnet, chain 10143) | [`0xDF9f42AE4f81F086F8495c5a5339dDaa90057993`](https://testnet.monadvision.com/address/0xDF9f42AE4f81F086F8495c5a5339dDaa90057993) |
 | Keeper runs | [Actions → keeper](../../actions/workflows/keeper.yml) (hourly) |
 | Archived snapshots | [`archive` branch](../../tree/archive/batches) |
