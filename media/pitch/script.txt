@@ -1,0 +1,15 @@
+Hi, I'm Jannet. I've been building SMT, an explainable AI trading bot, on my own since January. This is SMT Receipts, my entry for Monad Metropolis.
+
+Trading calls are easy to fake after the fact. Signal groups delete the calls that lost, screenshots get edited, and a bot that grades itself is marking its own exam. So most people just follow whoever posts the most wins.
+
+I know why this matters. SMT came first out of more than two hundred and thirty teams in the WEEX AI Wars preliminary, then lost the final. I said so in public, and that honesty is what got the exchange's attention.
+
+So every hour, SMT publishes a call on eight coins, with its reason. A keeper seals all eight on Monad, waits included, before the entry price exists. Four hours later, anyone can grade the call with prices RedStone signed at that exact second. The contract checks the signatures itself and takes off the trading fee.
+
+There's no owner key and no upgrade path. If nobody grades a call in time, it counts as a miss. Not even I can edit a receipt.
+
+Monad makes it cheap enough to seal every call, every hour. That matters. If each receipt cost real money, you'd only seal the calls you liked.
+
+Next, receipts go into SMT World, where exchange users sign in and follow the bot. And the registry is open, so any trading agent can get a record it can't fake.
+
+SMT Receipts. Every call, sealed before the market moves. Thanks for watching.

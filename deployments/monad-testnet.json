@@ -1,0 +1,18 @@
+{
+  "chainId": 10143,
+  "address": "0xDF9f42AE4f81F086F8495c5a5339dDaa90057993",
+  "create2Proxy": "0x4e59b44847b379578588920ca78fbf26c0b4956c",
+  "salt": "0x2167040ffec69d2db9d9f17af66c244274cb04b1101821c8ae7a2ca8f3e671cf",
+  "initCodeHash": "0xc62f617b7cf787c7e4e4e13e55153ceb5276b70a5edfdc55796ad300abc06867",
+  "oracle": {
+    "dataService": "redstone-primary-prod",
+    "signers": [
+      "0x8BB8F32Df04c8b654987DAaeD53D6B6091e3B774",
+      "0xdEB22f54738d54976C4c0fe5ce6d408E40d88499",
+      "0x51Ce04Be4b3E32572C4Ec9135221d0691Ba7d202",
+      "0xDD682daEC5A90dD295d14DA4b0bec9281017b5bE",
+      "0x9c5AE89C4Af6aA32cE58588DBaF90d18a855B6de"
+    ],
+    "threshold": 3
+  }
+}

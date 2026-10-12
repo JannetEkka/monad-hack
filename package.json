@@ -1,0 +1,26 @@
+{
+  "name": "smt-receipts",
+  "version": "1.0.0",
+  "description": "An AI trading bot's calls, sealed on Monad before the market moves and graded by RedStone-signed prices.",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test test/SMTReceipts.test.js",
+    "e2e": "node scripts/e2e-local.js",
+    "address": "node scripts/address.js",
+    "keeper": "node keeper/keeper.js",
+    "keeper:dry": "node keeper/keeper.js --dry-run"
+  },
+  "author": "Jannet Akanksha Ekka",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.29.1"
+  },
+  "dependencies": {
+    "ethers": "^6.17.0"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  }
+}

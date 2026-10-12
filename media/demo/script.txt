@@ -1,0 +1,15 @@
+This is SMT Receipts, live on Monad testnet. Every hour it seals my AI trading bot's calls on eight coins, before the market moves.
+
+The scoreboard is read from the chain. A hit is a LONG or SHORT that beat the twelve basis point trading fee. Waits are on the record too, and a call nobody grades counts as a miss.
+
+Each slip is one hourly snapshot: all eight coins, in the order SMT registered them. Graded calls show their result after fees. Pending ones show when they can be graded.
+
+Here's one call. This is SMT's reason, published before the trade and sealed on Monad. The entry price is the first RedStone tick after the seal, and the exit is four hours later. The contract checked both prices itself.
+
+Verify recomputes everything in the browser. The archived snapshot hashes to what was sealed, and this coin's published reason hashes to this line. None of it relies on trusting me.
+
+And here's the record itself, read straight from Monad: the seal transaction, its block, and the event with all eight calls and their reason hashes. The grade transaction carries the signed prices.
+
+And this is the keeper's hourly run on GitHub Actions. Seal, grade and expire, each a tagged line with its transaction.
+
+No owner key, no upgrade path. Every call, sealed before the market moves.

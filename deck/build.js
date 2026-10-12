@@ -1,0 +1,122 @@
+// Builds the pitch deck: reads the live scoreboard from Monad testnet (or says the contract
+// is not live yet), writes deck/index.html, then (with --render) slide PNGs + a PDF.
+//   node deck/build.js            # html only
+//   node deck/build.js --render   # + deck/slides/NN.png + deck/SMT-Receipts-deck.pdf (needs playwright)
+const fs = require("fs");
+const path = require("path");
+const { ethers } = require("ethers");
+
+const ROOT = path.join(__dirname, "..");
+const dep = require(path.join(ROOT, "deployments", "monad-testnet.json"));
+const PAGE = "https://jannetekka.github.io/monad-hack/";
+const REPO = "https://github.com/JannetEkka/monad-hack";
+const short = (a) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+
+async function live() {
+  try {
+    const p = new ethers.JsonRpcProvider(process.env.MONAD_RPC_URL || "https://testnet-rpc.monad.xyz", 10143, { staticNetwork: true });
+    if ((await p.getCode(dep.address)) === "0x") return null;
+    const c = new ethers.Contract(dep.address, ["function stats(uint256) view returns (uint32,uint32,uint32,uint32,uint32,uint32,int64)", "function batchCount() view returns (uint256)"], p);
+    const [batches, calls, waits, graded, hits, expired, sumNet] = (await c.stats(1)).map(Number);
+    return { batches, calls, waits, graded, hits, expired, sumNet };
+  } catch {
+    return null;
+  }
+}
+
+const slide = (cls, inner) => `<section class="slide ${cls}">${inner}<footer><img src="img/logo.png" alt=""><span>SMT Receipts · Monad Metropolis</span></footer></section>`;
+
+function html(L) {
+  const scored = L ? L.graded + L.expired : 0;
+  const liveBlock = L
+    ? `<div class="kpis">
+        <div><b>${L.batches}</b><span>hourly snapshots sealed</span></div>
+        <div><b>${L.calls + L.waits}</b><span>calls on the record, ${L.waits} of them WAIT</span></div>
+        <div><b>${scored}</b><span>LONG/SHORT calls graded${L.expired ? `, ${L.expired} expired` : ""}</span></div>
+        <div><b>${scored ? ((100 * L.hits) / scored).toFixed(0) + "%" : "–"}</b><span>beat the 12 bp fee${scored ? `, avg ${(L.sumNet / scored / 100).toFixed(1)} bp` : ""}</span></div>
+      </div>
+      <p class="sub">Read from the contract at ${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC. Good or bad, it's the number on the chain.</p>`
+    : `<p class="big">The contract address is fixed by its code: <code>${dep.address}</code>. The keeper deploys it, then seals every hour.</p>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>SMT Receipts deck</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Manrope:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#081a34;--navy2:#0d2547;--line:#22406d;--gold:#d4af37;--gold2:#f3d98b;--ink:#e8eefb;--muted:#9fb4cf;--paper:#f7f2e4;--long:#1f9d63;--short:#d6455d}
+*{box-sizing:border-box}body{margin:0;background:#000}
+.slide{width:1920px;height:1080px;position:relative;overflow:hidden;padding:110px 140px;color:var(--ink);font:500 34px/1.45 "Plus Jakarta Sans",sans-serif;
+  background:radial-gradient(1400px 800px at 85% -10%,#16386b 0%,transparent 60%),var(--navy);page-break-after:always}
+h1,h2{font-family:Manrope,sans-serif;letter-spacing:-.015em;margin:0 0 36px;line-height:1.05}
+h1{font-size:120px}h2{font-size:72px;max-width:1500px}h1 em,h2 em{font-style:normal;color:var(--gold)}
+.eyebrow{font:700 24px/1 "JetBrains Mono",monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:28px}
+p{margin:0 0 24px;max-width:1480px;color:#c9d7ee}.big{font-size:44px;color:var(--ink)}.sub{font-size:28px;color:var(--muted)}
+ul{margin:0;padding-left:0;list-style:none}li{margin:0 0 26px;padding-left:46px;position:relative;max-width:1500px;color:#c9d7ee}
+li::before{content:"";position:absolute;left:0;top:18px;width:18px;height:18px;border-radius:4px;background:var(--gold)}
+b{color:var(--ink)}code{font:600 30px "JetBrains Mono",monospace;color:var(--gold2)}
+footer{position:absolute;left:140px;right:140px;bottom:50px;display:flex;align-items:center;gap:16px;color:var(--muted);font:600 22px "JetBrains Mono",monospace;letter-spacing:.08em}
+footer img{width:40px;height:40px}
+.title{display:flex;flex-direction:column;justify-content:center}.title .logo{width:220px;height:220px;margin-bottom:40px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:28px;margin-top:20px}
+.steps div{background:var(--navy2);border:2px solid var(--line);border-radius:22px;padding:34px 32px;font-size:28px;color:#c9d7ee}
+.steps b{display:block;font:800 40px Manrope,sans-serif;color:var(--gold);margin:14px 0 10px}.steps i{font:800 30px Manrope;font-style:normal;background:var(--gold);color:var(--navy);border-radius:50%;width:52px;height:52px;display:inline-grid;place-items:center}
+table{border-collapse:collapse;width:100%;font-size:30px}td{padding:20px 22px;border-bottom:2px solid var(--line);vertical-align:top;color:#c9d7ee}td:first-child{color:var(--gold2);font-weight:700;width:330px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;margin:20px 0 40px}.kpis div{background:var(--navy2);border:2px solid var(--line);border-radius:22px;padding:34px}
+.kpis b{display:block;font:800 92px/1 Manrope,sans-serif;color:var(--gold);margin-bottom:14px}.kpis span{font-size:26px;color:var(--muted)}
+.shot{position:absolute;right:120px;top:150px;width:900px;border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.split p,.split li{max-width:760px}
+.links p{font:600 38px "JetBrains Mono",monospace;color:var(--gold2)}
+</style></head><body>
+${slide("title", `<img class="logo" src="img/logo.png" alt=""><div class="eyebrow">Monad Metropolis · Onchain Finance &amp; Trading</div>
+<h1>SMT <em>Receipts</em></h1><p class="big">An AI trading bot's calls, sealed on Monad before the market moves and graded later against signed prices. Nobody can edit them, me included.</p>
+<p class="sub">Jannet Akanksha Ekka · solo builder · SMT (Smart Money Trading)</p>`)}
+${slide("", `<div class="eyebrow">The problem</div><h2>A trading call is easy to fake <em>after</em> the fact.</h2>
+<ul><li>Signal groups delete the calls that lost. Screenshots get edited.</li><li>A bot that grades itself is marking its own exam.</li>
+<li>Most people can't tell a real track record from a curated one, so they follow whoever posts the most wins.</li></ul>`)}
+${slide("", `<div class="eyebrow">Who's building it</div><h2>One builder, one bot, since January.</h2>
+<ul><li><b>SMT</b> is an explainable AI trading bot: six specialist agents vote on 8 coins and a judge writes the reason in plain words.</li>
+<li>Came <b>#1 of 230+ teams</b> in the WEEX AI Wars preliminary, then lost the final. I said so in public, and that is what got the exchange's attention.</li>
+<li>Google Cloud AI engineer, 4+ years at Deloitte before that. Provisional patent filed in India (2026).</li></ul>`)}
+${slide("split", `<div class="eyebrow">The product</div><h2>One receipt per hour.</h2>
+<ul><li>All 8 coins on every slip, <b>WAITs included</b>.</li><li>Tap a line: the call, SMT's reason, the seal and grade transactions.</li><li><b>Verify</b> recomputes the hashes in your browser.</li></ul>
+<img class="shot" src="img/page-detail.png" alt="">`)}
+${slide("", `<div class="eyebrow">How it works</div><h2>Publish, seal, price, grade.</h2><div class="steps">
+<div><i>1</i><b>Publish</b>SMT World posts the committee's call on 8 coins every hour: LONG, SHORT or WAIT, a conviction and the reason.</div>
+<div><i>2</i><b>Seal</b>A keeper writes the whole snapshot to Monad, plus the hash of every reason. Old, repeated or partial snapshots are refused.</div>
+<div><i>3</i><b>Price</b>RedStone signs a price every 10 s. Entry is the first tick <i style="all:unset;color:var(--gold2)">after</i> the seal block; exit is 4 h later.</div>
+<div><i>4</i><b>Grade</b>Anyone submits the two signed prices. The contract checks 3 of 5 signatures, subtracts the 12 bp fee and keeps score.</div></div>`)}
+${slide("", `<div class="eyebrow">Trust model</div><h2>What can't be faked.</h2><table>
+<tr><td>Hindsight</td><td>The entry price is signed after the call is on-chain.</td></tr>
+<tr><td>The price</td><td>The contract recovers RedStone's signatures at the exact second. It never takes a number from me.</td></tr>
+<tr><td>Cherry-picking</td><td>Every coin is sealed every time. A call nobody grades within 22 h counts as a miss that paid its fee.</td></tr>
+<tr><td>Edits</td><td>No owner, no admin key, no upgrade path. Deployed through a CREATE2 proxy, so the code fixes the address.</td></tr></table>`)}
+${slide("", `<div class="eyebrow">Why Monad</div><h2>Cheap enough to seal <em>every</em> call.</h2>
+<ul><li>8 calls per seal, 24 seals a day, plus grades that each carry a dozen signed prices. About 0.015 testnet MON a seal.</li>
+<li>The seal lands seconds after the keeper reads the feed, and the entry tick follows within 10 seconds.</li>
+<li>If every receipt cost real money, you'd only seal the calls you liked. That is the problem again.</li></ul>`)}
+${slide("", `<div class="eyebrow">Live on Monad testnet</div><h2>The record so far.</h2>${liveBlock}`)}
+${slide("", `<div class="eyebrow">Where it goes</div><h2>Receipts are the trust layer for SMT World.</h2>
+<ul><li><b>SMT World</b> is what exchanges buy: their users sign in with their exchange account, arrive funded, and the affiliate fee is split.</li>
+<li>A user copying a bot should be able to check its record. Receipts make that a link, not a promise.</li>
+<li>The registry is open: any trading agent can register and get a record it can't edit. Next: receipts inside SMT World, mainnet, a second agent.</li></ul>`)}
+${slide("links", `<div class="eyebrow">Try it</div><h2>Every call, sealed before the market moves.</h2>
+<p>${PAGE}</p><p>${REPO}</p><p>contract ${short(dep.address)} on Monad testnet (chain 10143)</p>`)}
+</body></html>`;
+}
+
+(async () => {
+  const L = await live();
+  const out = path.join(__dirname, "index.html");
+  fs.writeFileSync(out, html(L));
+  console.log(L ? `live: ${JSON.stringify(L)}` : "contract not live yet: slide 8 shows the fixed address", "→", out);
+  if (!process.argv.includes("--render")) return;
+  const { chromium } = require(process.env.PLAYWRIGHT_MODULE || "playwright");
+  const browser = await chromium.launch({ executablePath: "/opt/pw-browsers/chromium" });
+  const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
+  await page.goto("file://" + out, { waitUntil: "networkidle" });
+  await page.waitForTimeout(800);
+  const dir = path.join(__dirname, "slides");
+  fs.mkdirSync(dir, { recursive: true });
+  const n = await page.locator(".slide").count();
+  for (let i = 0; i < n; i++) await page.locator(".slide").nth(i).screenshot({ path: path.join(dir, `${String(i + 1).padStart(2, "0")}.png`) });
+  await page.pdf({ path: path.join(__dirname, "SMT-Receipts-deck.pdf"), width: "1920px", height: "1080px", printBackground: true });
+  await browser.close();
+  console.log(`rendered ${n} slides + PDF`);
+})();

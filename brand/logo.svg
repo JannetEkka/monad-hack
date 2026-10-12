@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <radialGradient id="bg" cx="70%" cy="20%" r="90%">
+      <stop offset="0" stop-color="#16386b"/><stop offset="0.6" stop-color="#0b2142"/><stop offset="1" stop-color="#081a34"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f3d98b"/><stop offset="1" stop-color="#c79a22"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="200" fill="url(#bg)"/>
+  <!-- the receipt: flat top, torn zig-zag bottom -->
+  <path d="M292 168 H732 V792 l-40 34 l-40 -34 l-40 34 l-40 -34 l-40 34 l-40 -34 l-40 34 l-40 -34 l-40 34 l-40 -34 l-40 34 Z" fill="#f7f2e4"/>
+  <!-- header -->
+  <rect x="352" y="228" width="200" height="26" rx="6" fill="#1b2433"/>
+  <rect x="352" y="272" width="320" height="10" rx="5" fill="#c9c1a9"/>
+  <!-- lines: pair, direction chip, result -->
+  <g font-family="JetBrains Mono, monospace" font-weight="700">
+    <rect x="352" y="326" width="84" height="22" rx="5" fill="#1b2433"/>
+    <rect x="462" y="322" width="96" height="30" rx="7" fill="#1f9d63"/>
+    <rect x="600" y="330" width="72" height="14" rx="7" fill="#1f9d63"/>
+    <rect x="352" y="394" width="84" height="22" rx="5" fill="#1b2433"/>
+    <rect x="462" y="390" width="96" height="30" rx="7" fill="none" stroke="#a8a291" stroke-width="4"/>
+    <rect x="600" y="398" width="72" height="14" rx="7" fill="#c9c1a9"/>
+    <rect x="352" y="462" width="84" height="22" rx="5" fill="#1b2433"/>
+    <rect x="462" y="458" width="96" height="30" rx="7" fill="#d6455d"/>
+    <rect x="600" y="466" width="72" height="14" rx="7" fill="#d6455d"/>
+    <rect x="352" y="530" width="84" height="22" rx="5" fill="#1b2433"/>
+    <rect x="462" y="526" width="96" height="30" rx="7" fill="none" stroke="#a8a291" stroke-width="4"/>
+    <rect x="600" y="534" width="72" height="14" rx="7" fill="#c9c1a9"/>
+  </g>
+  <line x1="352" y1="600" x2="672" y2="600" stroke="#c9c1a9" stroke-width="5" stroke-dasharray="14 10"/>
+  <!-- the seal: gold wax-style stamp with a check -->
+  <g transform="translate(676 676)">
+    <circle r="150" fill="url(#gold)"/>
+    <circle r="124" fill="none" stroke="#081a34" stroke-width="8" stroke-dasharray="4 14"/>
+    <path d="M-58 4 L-16 46 L62 -40" fill="none" stroke="#081a34" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

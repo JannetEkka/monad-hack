@@ -1,0 +1,76 @@
+# One agent publishing calls (SMT is agent 1). Counters mirror SMTReceipts.stats().
+type Agent {
+  id: ID!
+  agentId: BigInt!
+  publisher: String!
+  name: String!
+  source: String!
+  feeBps: Int!
+  pairs: [String!]!
+  batches: Int!
+  calls: Int!
+  waits: Int!
+  graded: Int!
+  hits: Int!
+  expired: Int!
+  sumNetPpm: BigInt!
+  lastSealedAt: Int!
+  pairStats: [PairStat!]! @derivedFrom(field: "agent")
+}
+
+# One sealed snapshot: every pair the agent follows, WAITs included.
+type Batch {
+  id: ID!
+  batchId: BigInt! @index
+  agent: Agent!
+  sourceTs: Int!
+  sealedAt: Int!
+  sealBlock: Int!
+  sealTx: String!
+  snapshotHash: String!
+  entryTs: Int!
+  exitTs: Int!
+  # SEALED (waiting for its horizon) | GRADED | EXPIRED | CLOSED (all WAIT)
+  status: String! @index
+  nDir: Int!
+  hits: Int!
+  closeTx: String
+  closedAt: Int
+  receipts: [Receipt!]! @derivedFrom(field: "batch")
+}
+
+# One call on one pair inside a batch.
+type Receipt {
+  id: ID!
+  batch: Batch!
+  agent: Agent!
+  feedIndex: Int!
+  pair: String! @index
+  # LONG | SHORT | WAIT
+  direction: String!
+  confBps: Int!
+  reasonHash: String!
+  why: String!
+  sealedAt: Int!
+  exitTs: Int!
+  # WAIT | PENDING | HIT | MISS | EXPIRED
+  status: String! @index
+  entryPrice: BigInt
+  exitPrice: BigInt
+  movePpm: Int
+  netPpm: Int
+}
+
+# The scoreboard per pair.
+type PairStat {
+  id: ID!
+  agent: Agent!
+  pair: String!
+  longs: Int!
+  shorts: Int!
+  waits: Int!
+  graded: Int!
+  hits: Int!
+  expired: Int!
+  sumNetPpm: BigInt!
+}

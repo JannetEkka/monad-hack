@@ -1,0 +1,38 @@
+name: ci
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npx hardhat compile
+      - name: The configs name the address the compiled contract will have
+        run: |
+          node scripts/address.js > /dev/null
+          git diff --exit-code deployments/monad-testnet.json || { echo "::error::deployments/monad-testnet.json is stale: run node scripts/address.js and update web/config.js + indexer/config.yaml"; exit 1; }
+      - run: npx hardhat test test/SMTReceipts.test.js
+      - name: End-to-end rehearsal (local node, real RedStone history, the real keeper)
+        run: node scripts/e2e-local.js
+  indexer:
+    runs-on: ubuntu-latest
+    defaults:
+      run: { working-directory: indexer }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm, cache-dependency-path: indexer/pnpm-lock.yaml }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm codegen
+      - run: npx tsc --noEmit
+      - run: pnpm test

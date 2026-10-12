@@ -1,0 +1,14 @@
+node_modules
+artifacts/
+cache/
+coverage/
+typechain-types/
+.env
+*.log
+/out/
+indexer/generated/
+indexer/node_modules/
+indexer/build/
+archive-out/
+archive-e2e/
+media/**/audio/
