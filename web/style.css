@@ -134,7 +134,9 @@ dialog .close { position: absolute; right: 10px; top: 8px; border: 0; background
 .kv dt { color: var(--paper-muted); }
 .kv dd { margin: 0; word-break: break-all; }
 .verify { margin-top: 16px; border-top: 1px dashed #c9c1a9; padding-top: 14px; }
-.verify button { font: 700 13px/1 var(--mono); padding: 10px 14px; border-radius: 8px; border: 0; background: var(--navy); color: var(--gold-soft); cursor: pointer; }
+.verify button { font: 700 13px/1 var(--mono); padding: 10px 14px; border-radius: 8px; border: 0; background: var(--navy); color: var(--gold-soft); cursor: pointer; margin: 0 8px 8px 0; }
+.verify button.alt { background: transparent; color: var(--navy); border: 1px solid var(--navy); }
+.chain { margin: 12px 0 0; padding: 12px 14px; background: #0b1424; color: #cfe0ff; border-radius: 8px; font: 12px/1.55 var(--mono); white-space: pre-wrap; word-break: break-all; }
 .checks { list-style: none; padding: 0; margin: 12px 0 0; font: 13px/1.5 var(--mono); }
 .checks li::before { content: "· "; }
 .checks li.ok::before { content: "✓ "; color: var(--hit); }

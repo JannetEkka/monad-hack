@@ -270,9 +270,47 @@
       <div class="d-sub">Receipt #${b.batchId} · line ${x.feedIndex + 1} of ${b.receipts.length}</div>
       ${x.why ? `<p class="why">${esc(x.why)}</p>` : `<p class="why">WAIT: the committee sat this one out. Its full reasoning is in the sealed snapshot; press Verify to read it.</p>`}
       <dl class="kv">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>
-      <div class="verify"><button id="verifyBtn">Verify this receipt in my browser</button><ul class="checks" id="checks"></ul></div>`;
+      <div class="verify"><button id="verifyBtn">Verify this receipt in my browser</button>
+        <button id="chainBtn" class="alt">Show the on-chain record</button><ul class="checks" id="checks"></ul><pre class="chain" id="chain" hidden></pre></div>`;
     $("#verifyBtn").onclick = () => verify(b, x);
+    $("#chainBtn").onclick = () => chainRecord(b);
     $("#detail").showModal();
+  }
+
+  // The seal (and grade) transactions read straight from Monad's RPC and decoded here: the
+  // explorers put a bot check in front of scripted browsers, the chain itself does not.
+  async function chainRecord(b) {
+    const el = $("#chain");
+    el.hidden = false;
+    el.textContent = "reading Monad…";
+    const provider = new E.JsonRpcProvider(C.rpc, C.chainId, { staticNetwork: true });
+    const pairs = b.receipts.map((r) => r.pair);
+    const lines = [];
+    for (const [label, hash] of [["seal", b.sealTx], ["grade", b.closeTx && b.closeTx !== b.sealTx ? b.closeTx : null]]) {
+      if (!hash) continue;
+      const [tx, rc] = await Promise.all([provider.getTransaction(hash), provider.getTransactionReceipt(hash)]);
+      const blk = await provider.getBlock(rc.blockNumber);
+      lines.push(`── ${label} transaction ──`, `hash    ${hash}`, `block   ${rc.blockNumber.toLocaleString()} · ${utc(blk.timestamp)}`,
+        `from    ${tx.from}`, `to      ${tx.to}  (SMTReceipts)`, `gas     ${rc.gasUsed.toLocaleString()} used · status ${rc.status === 1 ? "success" : "REVERTED"}`);
+      for (const log of rc.logs) {
+        if (log.address.toLowerCase() !== C.contract.toLowerCase()) continue;
+        const ev = iface.parseLog(log);
+        if (!ev) continue;
+        lines.push(`event   ${ev.name}(batchId ${ev.args.batchId})`);
+        if (ev.name === "Sealed") {
+          const w = BigInt(ev.args.calls);
+          lines.push(`  sourceTs  ${utc(ev.args.sourceTs)}`, `  entry     ${utc(ev.args.entryTs)}   exit ${utc(ev.args.exitTs)}`,
+            `  calls     ${pairs.map((p, k) => { const v = (w >> BigInt(16 * k)) & 0xffffn; return `${p} ${DIR[Number(v >> 14n)]} ${(Number(v & 0x3fffn) / 100).toFixed(0)}%`; }).join(" · ")}`,
+            `  snapshot  ${ev.args.snapshotHash}`, ...ev.args.reasonHashes.map((h, k) => `  reason ${pairs[k].padEnd(4)} ${h}`));
+        } else if (ev.name === "Graded") {
+          ev.args.feedIndex.forEach((fi, k) => lines.push(`  ${pairs[Number(fi)].padEnd(4)} entry ${px(ev.args.entryPrice[k])} → exit ${px(ev.args.exitPrice[k])} · move ${bp(Number(ev.args.movePpm[k]))} · net ${bp(Number(ev.args.netPpm[k]))}`));
+        } else if (ev.name === "Expired") {
+          lines.push(`  ${ev.args.missed} call(s) counted as misses`);
+        }
+      }
+    }
+    el.textContent = lines.join("\n");
+    el.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
   async function verify(b, x) {
