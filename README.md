@@ -26,6 +26,15 @@ Anyone selling trading calls (a Telegram group, an influencer, an "AI signal" bo
 4. **Grade.** Anyone submits the RedStone packages signed at those two exact seconds. The contract checks three of RedStone's five signatures itself, takes the median, computes the move, subtracts the round-trip fee SMT declared at registration (12 bp) and keeps score.
 5. **Show.** An Envio HyperIndex indexer turns the events into a scoreboard; the page shows every receipt and lets anyone recompute its hashes in the browser.
 
+### Two records: what SMT says, and what SMT holds
+
+The committee's calls are advisory; SMT's written setups decide its trades. So the contract carries a second agent, **"SMT - live positions"** (agent 2), with its own scoreboard and its own tab on the page:
+
+- The keeper reads `live.open[]` from SMT World's `account.json` and keeps seven fields per position: pair, side, entry, opened_at, setup_name, lane, leverage. No size, equity, mark or PnL leaves the file, and `paper.open` is never read.
+- A held position is sealed as its side, with the reason *"held position, opened &lt;opened_at&gt; by &lt;setup_name&gt;"*, and graded from the seal over the same horizon, net of the same 12 bp fee. A coin SMT doesn't hold (or holds both ways) is a WAIT.
+- It seals once per horizon, so no two receipts grade the same price move, and at once when a position opens or closes.
+- It signs with a key derived from the keeper's (`keccak256(key ‖ "smt-receipts/positions")`), so there is still one secret; the keeper tops that wallet up and logs `[FUND]`.
+
 ```mermaid
 sequenceDiagram
     participant W as SMT World (public feed)
@@ -56,7 +65,7 @@ sequenceDiagram
 | No editing afterwards | No owner, no admin key, no upgrade path, no setter. Deployed through the canonical CREATE2 proxy, so the address is fixed by the code itself. |
 | The reason is the one SMT published | Each line's `reasonHash` is `keccak256` of the canonical JSON of SMT World's row for that coin; the keeper archives the exact snapshot bytes, whose hash is sealed too. The page recomputes both. |
 
-**Honest limits.** The keeper decides *when* to seal (hourly; a skipped hour is a visible gap) and which three of the five RedStone signers to submit (it always takes the three lowest-index valid ones; a different choice moves the median by at most the spread between signers, typically well under 1 bp against a 12 bp fee). The calls graded here are SMT's public committee verdicts, which SMT itself labels advisory: its written setups decide its trades, and its trades, balances and PnL stay private. RedStone's public gateway keeps about 24 hours of signed history, which is why the grading window is 22 hours.
+**Honest limits.** The keeper decides *when* to seal (hourly; a skipped hour is a visible gap) and which three of the five RedStone signers to submit (it always takes the three lowest-index valid ones; a different choice moves the median by at most the spread between signers, typically well under 1 bp against a 12 bp fee). Agent 1 grades SMT's public committee verdicts, which SMT itself labels advisory. Agent 2 grades the positions SMT holds, one 4-hour window at a time: a receipt says whether price moved the held way after the seal, not what the trade made (sizes, exits and PnL stay private). Its sealed snapshot is the keeper's extract of `account.json`, not the file's bytes (the file changes hourly and holds private fields), so it shows what the keeper read, at the time it read it. RedStone's public gateway keeps about 24 hours of signed history, which is why the grading window is 22 hours.
 
 ## Why Monad
 
@@ -91,8 +100,8 @@ Monad charges the gas *limit*, so the keeper sets each limit to the estimate + 2
 ```bash
 npm ci
 npx hardhat compile
-npm test                    # 16 contract tests
-npm run e2e                 # deploy → register → seal → grade against RedStone's real signed history
+npm test                    # 18 contract tests
+npm run e2e                 # deploy → register both agents → seal → grade against RedStone's real signed history
 npm run keeper:dry          # read the live feed and Monad testnet, build every transaction, send nothing
 cd indexer && pnpm install && pnpm codegen && pnpm test
 ```
@@ -101,7 +110,7 @@ cd indexer && pnpm install && pnpm codegen && pnpm test
 
 ## Data and keys
 
-- **Input:** only SMT World's public feed (`decisions.json`). No SMT parameters, research, trades or PnL are read or published.
+- **Input:** only SMT World's public feeds: `decisions.json` (the committee) and, for the positions agent, seven fields of each live position in `account.json`. No SMT parameters, research, sizes, balances or PnL are published.
 - **Prices:** RedStone's public gateway (`redstone-primary-prod`), no API key.
 - **Chain:** Monad testnet only. The keeper wallet is fresh, holds only free testnet MON from QuickNode's faucet, and its key exists only as a GitHub environment secret.
 

@@ -8,6 +8,13 @@
   const $ = (s) => document.querySelector(s);
   const qs = new URLSearchParams(location.search);
   const ENVIO = qs.get("envio") || C.envioGraphql;
+  // Two agents share the contract: SMT World's committee calls, and SMT's held positions.
+  // ?agent=<id> picks one; the tabs above the scoreboard switch between them.
+  const AGENTS = C.agents || [{ id: C.agentId, label: "Calls" }];
+  let cur = AGENTS.find((a) => a.id === Number(qs.get("agent"))) || AGENTS[0];
+  C.agentId = cur.id;
+  const held = () => !!cur.held;
+  const callText = (x) => (x.direction === "WAIT" ? "—" : held() ? "held" : `${(x.confBps / 100).toFixed(0)}%`);
 
   const ABI = [
     "function agentCount() view returns (uint256)",
@@ -93,10 +100,17 @@
       hits: Number(st.hits), expired: Number(st.expired), sumNetPpm: Number(st.sumNetPpm),
     };
     const n = Number(count);
-    const ids = [];
-    for (let i = n - 1; i >= 0 && ids.length < C.recent; i--) ids.push(i);
-    const raw = await Promise.all(ids.map((i) => c.batch(i).then((r) => ({ i, r }))));
-    const mine = raw.filter(({ r }) => Number(r.b.agentId) === C.agentId);
+    // batch ids are shared by every agent, so walk back until this agent's latest `recent` are found
+    const mine = [];
+    let next = n - 1;
+    while (next >= 0 && mine.length < C.recent && n - next <= C.recent * 10) {
+      const ids = [];
+      for (let i = next; i >= 0 && ids.length < C.recent; i--) ids.push(i);
+      next -= ids.length;
+      const got = await Promise.all(ids.map((i) => c.batch(i).then((r) => ({ i, r }))));
+      mine.push(...got.filter(({ r }) => Number(r.b.agentId) === C.agentId));
+    }
+    mine.splice(C.recent);
     const topicId = (i) => E.zeroPadValue(E.toBeHex(i), 32);
     const tSealed = iface.getEvent("Sealed").topicHash;
     const tClose = [iface.getEvent("Graded").topicHash, iface.getEvent("Expired").topicHash];
@@ -148,7 +162,7 @@
         if (x.status === "HIT" || x.status === "MISS") { p.graded++; p.hits += x.status === "HIT"; p.sumNetPpm += x.netPpm; }
         if (x.status === "EXPIRED") { p.expired++; p.sumNetPpm += x.netPpm; }
       }
-    return { source: "chain", deployed: true, agent, pairStats: Object.values(ps), pairStatsComplete: n <= C.recent, batches };
+    return { source: "chain", deployed: true, agent, pairStats: Object.values(ps), pairStatsComplete: next < 0 && mine.length < C.recent, batches };
   }
 
   // ── render ────────────────────────────────────────────────────────────────────────────
@@ -185,8 +199,10 @@
     const tiles = [
       { k: "Hit rate, net of fees", v: scored ? pct(a.hits / scored) : "—", s: scored ? `${a.hits} of ${scored} calls beat the ${a.feeBps} bp round trip` : "no call has reached its horizon yet", gold: true },
       { k: "Average per call", v: scored ? bp(a.sumNetPpm / scored) : "—", s: "price move in the call's direction, minus fees" },
-      { k: "Calls made", v: a.calls, s: `${a.graded} graded · ${a.expired} expired · ${pending} pending` },
-      { k: "WAITs sealed", v: a.waits, s: "sitting out is on the record too" },
+      { k: held() ? "Held positions sealed" : "Calls made", v: a.calls, s: `${a.graded} graded · ${a.expired} expired · ${pending} pending` },
+      held()
+        ? { k: "Coins not held", v: a.waits, s: "sealed as WAIT, every time" }
+        : { k: "WAITs sealed", v: a.waits, s: "sitting out is on the record too" },
       { k: "Snapshots sealed", v: a.batches, s: a.pairs.join(" · ") },
     ];
     $("#tiles").innerHTML = tiles
@@ -224,13 +240,13 @@
           .map(
             (x) => `<button class="line" data-b="${b.batchId}" data-i="${x.feedIndex}" aria-label="${x.pair} ${x.direction} details">
               <span class="pair">${esc(x.pair)}</span><span class="dir ${x.direction}">${x.direction}</span>
-              <span class="conf">${(x.confBps / 100).toFixed(0)}%</span><span class="res ${x.status}">${resultText(x)}</span></button>`
+              <span class="conf">${callText(x)}</span><span class="res ${x.status}">${resultText(x)}</span></button>`
           )
           .join("");
         const exit = b.status === "SEALED" ? `grades after ${when(b.exitTs)}` : b.status === "CLOSED" ? "all WAIT · nothing to grade" : `${b.status.toLowerCase()}`;
         return `<article class="slip">
           <h3><span>Receipt #${b.batchId}</span><span>${when(b.sealedAt)}</span></h3>
-          <div class="meta">SMT published ${when(b.sourceTs)} · sealed ${lag} min later</div>
+          <div class="meta">${held() ? "SMT's account read" : "SMT published"} ${when(b.sourceTs)} · sealed ${lag} min later</div>
           <span class="stamp ${b.status}">${b.status}</span>
           <div class="rule"></div>${lines}<div class="rule"></div>
           <div class="foot"><span>${exit}</span><span>seal ${txLink(b.sealTx)}</span></div>
@@ -248,8 +264,8 @@
   function openDetail(b, x) {
     const graded = x.status === "HIT" || x.status === "MISS";
     const rows = [
-      ["Call", `${x.direction} · conviction ${(x.confBps / 100).toFixed(0)}%`],
-      ["Published by SMT", utc(b.sourceTs)],
+      ["Call", held() ? (x.direction === "WAIT" ? "WAIT · no live position" : `${x.direction} · a position SMT holds`) : `${x.direction} · conviction ${(x.confBps / 100).toFixed(0)}%`],
+      [held() ? "Account as of" : "Published by SMT", utc(b.sourceTs)],
       ["Sealed on Monad", `${utc(b.sealedAt)} · ${txLink(b.sealTx)}`],
       ["Entry tick", `${utc(b.entryTs)}${graded ? ` · ${px(x.entryPrice)}` : ""}`],
       ["Exit tick", `${utc(b.exitTs)}${graded ? ` · ${px(x.exitPrice)}` : ""}`],
@@ -268,7 +284,7 @@
     $("#detailBody").innerHTML = `
       <h2 class="d-title" id="dTitle">${esc(x.pair)} <span class="dir ${x.direction}">${x.direction}</span></h2>
       <div class="d-sub">Receipt #${b.batchId} · line ${x.feedIndex + 1} of ${b.receipts.length}</div>
-      ${x.why ? `<p class="why">${esc(x.why)}</p>` : `<p class="why">WAIT: the committee sat this one out. Its full reasoning is in the sealed snapshot; press Verify to read it.</p>`}
+      ${x.why ? `<p class="why">${esc(x.why)}</p>` : `<p class="why">${held() ? "WAIT: SMT held no live position on this coin when the account was read." : "WAIT: the committee sat this one out. Its full reasoning is in the sealed snapshot; press Verify to read it."}</p>`}
       <dl class="kv">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>
       <div class="verify"><button id="verifyBtn">Verify this receipt in my browser</button>
         <button id="chainBtn" class="alt">Show the on-chain record</button><ul class="checks" id="checks"></ul><pre class="chain" id="chain" hidden></pre></div>`;
@@ -328,7 +344,7 @@
     }
     const raw = rec.source.raw;
     const snapHash = E.keccak256(E.toUtf8Bytes(raw));
-    add(snapHash === b.snapshotHash, `The archived SMT World snapshot hashes to the snapshot hash sealed on-chain (${short(snapHash)}).`);
+    add(snapHash === b.snapshotHash, `The archived ${held() ? "positions snapshot" : "SMT World snapshot"} hashes to the snapshot hash sealed on-chain (${short(snapHash)}).`);
     let snap;
     try { snap = JSON.parse(raw); } catch { add(false, "The archived snapshot is not valid JSON."); return; }
     const row = snap[x.pair];
@@ -337,17 +353,42 @@
     add(h === x.reasonHash, `${esc(x.pair)}'s published row hashes to this line's reason hash (${short(h)}).`);
     const act = String(row?.action || "").toUpperCase();
     const dir = act === "LONG" || act === "SHORT" ? act : "WAIT";
-    add(dir === x.direction, `SMT World said <b>${esc(row?.action)}</b> at ${(Number(row?.conf) * 100).toFixed(0)}% conviction; the seal says <b>${x.direction}</b> at ${(x.confBps / 100).toFixed(0)}%.`);
-    add(null, `Published ${esc(row?.as_of)}; sealed ${utc(b.sealedAt)}; entry price signed at ${utc(b.entryTs)}, after the seal.`);
+    if (held()) add(dir === x.direction, `SMT's account showed <b>${esc(row?.action)}</b>; the seal says <b>${x.direction}</b>.`);
+    else add(dir === x.direction, `SMT World said <b>${esc(row?.action)}</b> at ${(Number(row?.conf) * 100).toFixed(0)}% conviction; the seal says <b>${x.direction}</b> at ${(x.confBps / 100).toFixed(0)}%.`);
+    add(null, `${held() ? "Account read" : "Published"} ${esc(row?.as_of)}; sealed ${utc(b.sealedAt)}; entry price signed at ${utc(b.entryTs)}, after the seal.`);
     if (row?.why) add(null, `SMT's words: “${esc(row.why)}”`);
+    for (const p of row?.positions || [])
+      add(null, `Position: ${esc(p.side)} ${esc(p.pair)} at ${esc(p.entry)}, opened ${esc(p.opened_at)} by ${esc(p.setup_name)} (${esc(p.lane)} lane, ${esc(p.leverage)}× leverage)`);
     if (row?.votes) {
       const v = Object.entries(row.votes).map(([k, val]) => `${esc(k)} ${esc(val[0])} ${(Number(val[1]) * 100).toFixed(0)}%`).join(" · ");
       add(null, `Committee votes: ${v}`);
     }
   }
 
+  function renderTabs() {
+    const el = $("#agents");
+    if (AGENTS.length < 2) { el.hidden = true; return; }
+    el.innerHTML = AGENTS.map((a) => `<button role="tab" aria-selected="${a.id === cur.id}" data-a="${a.id}">${esc(a.label)}</button>`).join("");
+    $("#agentNote").textContent = cur.note || "";
+    $("#feedNote").textContent = cur.feedNote || "One slip per snapshot: all eight coins, in the order SMT registered them. Tap a line for its reason and its proof.";
+    el.onclick = (ev) => {
+      const btn = ev.target.closest("button[data-a]");
+      if (!btn || Number(btn.dataset.a) === cur.id) return;
+      cur = AGENTS.find((a) => a.id === Number(btn.dataset.a));
+      C.agentId = cur.id;
+      const u = new URL(location.href);
+      u.searchParams.set("agent", cur.id);
+      history.replaceState(null, "", u);
+      renderTabs();
+      $("#tiles").innerHTML = '<div class="tile skeleton"></div>'.repeat(5);
+      $("#slips").innerHTML = "";
+      load().catch(() => {});
+    };
+  }
+
   // ── boot ──────────────────────────────────────────────────────────────────────────────
   async function load() {
+    const asked = cur.id;
     let state;
     let note = "";
     if (ENVIO) {
@@ -358,12 +399,14 @@
       }
     }
     if (!state) state = await fromChain();
+    if (asked !== cur.id) return; // the reader switched tabs while this was loading
     renderSource(state, note);
     renderTiles(state);
     renderPairs(state);
     renderSlips(state);
   }
 
+  renderTabs();
   $("#contractLink").href = `${C.explorer}/address/${C.contract}`;
   $("#repoLink").href = C.repo;
   $("#worldLink").href = C.smtWorld;

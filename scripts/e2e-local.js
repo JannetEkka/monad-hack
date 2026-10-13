@@ -42,10 +42,15 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   snap.BTC.action = "LONG";
   snap.LTC.action = "SHORT";
   const body = JSON.stringify(snap, null, 2);
+  // SMT's account: the fixture's three held LONGs (BTC, LTC, SOL), re-dated the same way
+  const acct = JSON.parse(fs.readFileSync(path.join(ROOT, "test", "fixtures", "smt-world-account.json"), "utf8"));
+  acct.generated_at = new Date((nodeNow - 300) * 1000).toISOString();
+  const acctBody = JSON.stringify(acct, null, 2);
 
   const server = http.createServer((req, res) => {
     const u = new URL(req.url, "http://x");
     if (u.pathname === "/decisions.json") { res.setHeader("content-type", "application/json"); return res.end(body); }
+    if (u.pathname === "/account.json") { res.setHeader("content-type", "application/json"); return res.end(acctBody); }
     const file = u.pathname.startsWith("/archive/") ? path.join(out, u.pathname.slice(9)) : path.join(ROOT, "web", u.pathname === "/" ? "index.html" : u.pathname);
     if (!fs.existsSync(file)) { res.statusCode = 404; return res.end("not found"); }
     const ext = path.extname(file);
@@ -58,23 +63,35 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const keeper = async (extra = {}) =>
     (await execFileP("node", ["keeper/keeper.js"], {
       cwd: ROOT, encoding: "utf8",
-      env: { ...process.env, KEEPER_PRIVATE_KEY: KEY0, MONAD_RPC_URL: `http://127.0.0.1:${PORT_RPC}`, FEED_URL: `http://127.0.0.1:${PORT_WEB}/decisions.json`, HORIZON_SECONDS: "600", ARCHIVE_DIR: out, ...extra },
+      env: { ...process.env, KEEPER_PRIVATE_KEY: KEY0, MONAD_RPC_URL: `http://127.0.0.1:${PORT_RPC}`, FEED_URL: `http://127.0.0.1:${PORT_WEB}/decisions.json`, ACCOUNT_URL: `http://127.0.0.1:${PORT_WEB}/account.json`, HORIZON_SECONDS: "600", ARCHIVE_DIR: out, ...extra },
     })).stdout;
   let ok = false;
   try {
-    console.log("── run 1: deploy, register, seal");
+    console.log("── run 1: deploy, register the committee, seal (the positions wallet is funded on the next pass)");
     console.log(await keeper());
     await provider.send("evm_increaseTime", [700]);
     await provider.send("evm_mine", []);
-    console.log("── run 2: grade with RedStone's real signed history");
+    console.log("── run 2: fund + register + seal the live positions; grade the committee with RedStone's real signed history");
+    console.log(await keeper());
+    await provider.send("evm_increaseTime", [700]);
+    await provider.send("evm_mine", []);
+    console.log("── run 3: grade the positions");
     console.log(await keeper());
     const art = require(path.join(ROOT, "artifacts/contracts/SMTReceipts.sol/SMTReceipts.json"));
     const addr = require(path.join(ROOT, "deployments/monad-testnet.json")).address;
     const c = new ethers.Contract(addr, art.abi, provider);
     const st = await c.stats(1);
     const [b] = await c.batch(0);
-    ok = Number(st.graded) === 2 && Number(b.status) === 2 && fs.existsSync(path.join(out, "batches", "0.json"));
-    console.log(`── result: batch 0 status ${b.status}, graded ${st.graded}, hits ${st.hits}, sumNetPpm ${st.sumNetPpm} → ${ok ? "PASS" : "FAIL"}`);
+    const sp = await c.stats(2);
+    const [b1] = await c.batch(1);
+    const rec1 = path.join(out, "batches", "1.json");
+    const arch1 = fs.existsSync(rec1) ? fs.readFileSync(rec1, "utf8") : "";
+    const okCommittee = Number(st.graded) === 2 && Number(b.status) === 2 && fs.existsSync(path.join(out, "batches", "0.json"));
+    const okPositions = Number(b1.agentId) === 2 && Number(b1.status) === 2 && Number(sp.graded) === 3 && Number(sp.waits) === 5 &&
+      JSON.parse(arch1 || "{}").track === "positions" && !/MUST-NOT|PRIVATE/.test(arch1);
+    ok = okCommittee && okPositions;
+    console.log(`── result: committee batch 0 status ${b.status}, graded ${st.graded}, hits ${st.hits}, sumNetPpm ${st.sumNetPpm}`);
+    console.log(`           positions batch 1 agent ${b1.agentId} status ${b1.status}, graded ${sp.graded}, waits ${sp.waits}, hits ${sp.hits}, sumNetPpm ${sp.sumNetPpm}, archive clean ${!/MUST-NOT|PRIVATE/.test(arch1)} → ${ok ? "PASS" : "FAIL"}`);
   } catch (e) {
     console.error(e.stdout || "", e.stderr || "", e.message);
   }

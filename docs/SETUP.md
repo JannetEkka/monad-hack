@@ -32,8 +32,9 @@ What the keeper spends (Monad testnet, ~100 gwei, Monad charges the gas limit):
 | each hourly seal | ≈ 0.012–0.016 |
 | each grade (one per snapshot that had a LONG or SHORT) | ≈ 0.015–0.035 |
 | a day at the hourly cadence | ≈ 0.4–0.7 |
+| the live-positions agent: 0.5 MON top-up to its own wallet, then a seal + a 3-coin grade every 4 h | ≈ 0.3–0.4 a day |
 
-If the drip is small, set the repository **variable** (Settings → Secrets and variables → Actions → Variables) `SEAL_EVERY_MIN` to `110` (every 2 h) or `170` (every 3 h). Below 0.05 MON the keeper stops sealing and keeps grading, so nothing already sealed expires for lack of gas.
+If the drip is small, set the repository **variable** (Settings → Secrets and variables → Actions → Variables) `SEAL_EVERY_MIN` to `110` (every 2 h) or `170` (every 3 h). Below 0.05 MON the keeper stops sealing and keeps grading, so nothing already sealed expires for lack of gas. `POSITIONS` = `off` stops the live-positions agent; `POSITIONS_EVERY_MIN` changes its cadence (default: once per horizon, 240 min).
 
 ## 4. GitHub Pages (30 s)
 
