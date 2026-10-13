@@ -19,8 +19,9 @@ footer img{width:40px;height:40px}
 .steps div{background:var(--navy2);border:2px solid var(--line);border-radius:22px;padding:34px 32px;font-size:28px;color:#c9d7ee}
 .steps b{display:block;font:800 40px Manrope,sans-serif;color:var(--gold);margin:14px 0 10px}.steps i{font:800 30px Manrope;font-style:normal;background:var(--gold);color:var(--navy);border-radius:50%;width:52px;height:52px;display:inline-grid;place-items:center}
 table{border-collapse:collapse;width:100%;font-size:30px}td{padding:20px 22px;border-bottom:2px solid var(--line);vertical-align:top;color:#c9d7ee}td:first-child{color:var(--gold2);font-weight:700;width:330px}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;margin:20px 0 40px}.kpis div{background:var(--navy2);border:2px solid var(--line);border-radius:22px;padding:34px}
-.kpis b{display:block;font:800 92px/1 Manrope,sans-serif;color:var(--gold);margin-bottom:14px}.kpis span{font-size:26px;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin:12px 0 30px}.kpis div{background:var(--navy2);border:2px solid var(--line);border-radius:22px;padding:24px 30px}
+.kpis b{display:block;font:800 72px/1 Manrope,sans-serif;color:var(--gold);margin-bottom:10px}.kpis span{font-size:24px;color:var(--muted)}
+.row-title{font:700 24px/1 "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--gold2)}
 .shot{position:absolute;right:120px;top:150px;width:900px;border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
 .split p,.split li{max-width:760px}
 .links p{font:600 38px "JetBrains Mono",monospace;color:var(--gold2)}
@@ -36,7 +37,7 @@ table{border-collapse:collapse;width:100%;font-size:30px}td{padding:20px 22px;bo
 <li>Came <b>#1 of 230+ teams</b> in the WEEX AI Wars preliminary, then lost the final. I said so in public, and that is what got the exchange's attention.</li>
 <li>Google Cloud AI engineer, 4+ years at Deloitte before that. Provisional patent filed in India (2026).</li></ul><footer><img src="img/logo.png" alt=""><span>SMT Receipts · Monad Metropolis</span></footer></section>
 <section class="slide split"><div class="eyebrow">The product</div><h2>One receipt per hour.</h2>
-<ul><li>All 8 coins on every slip, <b>WAITs included</b>.</li><li>Tap a line: the call, SMT's reason, the seal and grade transactions.</li><li><b>Verify</b> recomputes the hashes in your browser.</li></ul>
+<ul><li>All 8 coins on every slip, <b>WAITs included</b>.</li><li>Tap a line: the call, SMT's reason, the seal and grade transactions.</li><li><b>Verify</b> recomputes the hashes in your browser.</li><li>Two records: the committee's calls, and the <b>positions SMT actually holds</b>.</li></ul>
 <img class="shot" src="img/page-detail.png" alt=""><footer><img src="img/logo.png" alt=""><span>SMT Receipts · Monad Metropolis</span></footer></section>
 <section class="slide "><div class="eyebrow">How it works</div><h2>Publish, seal, price, grade.</h2><div class="steps">
 <div><i>1</i><b>Publish</b>SMT World posts the committee's call on 8 coins every hour: LONG, SHORT or WAIT, a conviction and the reason.</div>
@@ -52,11 +53,23 @@ table{border-collapse:collapse;width:100%;font-size:30px}td{padding:20px 22px;bo
 <ul><li>8 calls per seal, 24 seals a day, plus grades that each carry a dozen signed prices. About 0.015 testnet MON a seal.</li>
 <li>The seal lands seconds after the keeper reads the feed, and the entry tick follows within 10 seconds.</li>
 <li>If every receipt cost real money, you'd only seal the calls you liked. That is the problem again.</li></ul><footer><img src="img/logo.png" alt=""><span>SMT Receipts · Monad Metropolis</span></footer></section>
-<section class="slide "><div class="eyebrow">Live on Monad testnet</div><h2>The record so far.</h2><p class="big">The contract address is fixed by its code: <code>0xDF9f42AE4f81F086F8495c5a5339dDaa90057993</code>. The keeper deploys it, then seals every hour.</p><footer><img src="img/logo.png" alt=""><span>SMT Receipts · Monad Metropolis</span></footer></section>
+<section class="slide "><div class="eyebrow">Live on Monad testnet</div><h2>The record so far.</h2><div class="row-title">Committee calls · advisory, every hour</div><div class="kpis">
+        <div><b>4</b><span>snapshots sealed</span></div>
+        <div><b>1</b><span>LONG/SHORT calls, plus 31 WAITs</span></div>
+        <div><b>0</b><span>graded, 1 pending</span></div>
+        <div><b>–</b><span>beat the 12 bp fee</span></div>
+      </div>
+      <div class="row-title">Held positions · what SMT actually holds, every 4 h</div><div class="kpis">
+        <div><b>1</b><span>snapshots sealed</span></div>
+        <div><b>3</b><span>held positions, plus 5 WAITs</span></div>
+        <div><b>0</b><span>graded, 3 pending</span></div>
+        <div><b>–</b><span>beat the 12 bp fee</span></div>
+      </div>
+      <p class="sub">Read from the contract at 2026-10-13 14:58 UTC. Good or bad, it's the number on the chain.</p><footer><img src="img/logo.png" alt=""><span>SMT Receipts · Monad Metropolis</span></footer></section>
 <section class="slide "><div class="eyebrow">Where it goes</div><h2>Receipts are the trust layer for SMT World.</h2>
 <ul><li><b>SMT World</b> is what exchanges buy: their users sign in with their exchange account, arrive funded, and the affiliate fee is split.</li>
 <li>A user copying a bot should be able to check its record. Receipts make that a link, not a promise.</li>
-<li>The registry is open: any trading agent can register and get a record it can't edit. Next: receipts inside SMT World, mainnet, a second agent.</li></ul><footer><img src="img/logo.png" alt=""><span>SMT Receipts · Monad Metropolis</span></footer></section>
+<li>The registry is open: any trading agent can register and get a record it can't edit. Next: receipts inside SMT World, mainnet, and other bots on the same registry.</li></ul><footer><img src="img/logo.png" alt=""><span>SMT Receipts · Monad Metropolis</span></footer></section>
 <section class="slide links"><div class="eyebrow">Try it</div><h2>Every call, sealed before the market moves.</h2>
 <p>https://jannetekka.github.io/monad-hack/</p><p>https://github.com/JannetEkka/monad-hack</p><p>contract 0xDF9f…7993 on Monad testnet (chain 10143)</p><footer><img src="img/logo.png" alt=""><span>SMT Receipts · Monad Metropolis</span></footer></section>
 </body></html>

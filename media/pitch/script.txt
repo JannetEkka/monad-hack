@@ -10,6 +10,8 @@ There's no owner key and no upgrade path. If nobody grades a call in time, it co
 
 Monad makes it cheap enough to seal every call, every hour. That matters. If each receipt cost real money, you'd only seal the calls you liked.
 
+It's live on Monad testnet now, with two records: the committee's hourly calls, and the positions SMT actually holds, each graded against signed prices. Good or bad, it's the number on the chain.
+
 Next, receipts go into SMT World, where exchange users sign in and follow the bot. And the registry is open, so any trading agent can get a record it can't fake.
 
 SMT Receipts. Every call, sealed before the market moves. Thanks for watching.

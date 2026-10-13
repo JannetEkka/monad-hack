@@ -10,6 +10,8 @@ Verify recomputes everything in the browser. The archived snapshot hashes to wha
 
 And here's the record itself, read straight from Monad: the seal transaction, its block, and the event with all eight calls and their reason hashes. The grade transaction carries the signed prices.
 
-And this is the keeper's hourly run on GitHub Actions. Seal, grade and expire, each a tagged line with its transaction.
+The committee's calls are advisory, so there's a second record: the positions SMT actually holds. Each one is sealed every four hours and graded the same way, on its own scoreboard. Sizes and profit stay private.
+
+And this is the keeper at work. It runs every hour on GitHub Actions, and commits each snapshot it seals to a public archive, so anyone can recompute the hashes.
 
 No owner key, no upgrade path. Every call, sealed before the market moves.
