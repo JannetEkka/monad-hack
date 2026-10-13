@@ -39,6 +39,8 @@ jobs:
           MONAD_RPC_URL: ${{ vars.MONAD_RPC_URL }}
           HORIZON_SECONDS: ${{ vars.HORIZON_SECONDS }}
           SEAL_EVERY_MIN: ${{ vars.SEAL_EVERY_MIN }}
+          POSITIONS: ${{ vars.POSITIONS }}
+          POSITIONS_EVERY_MIN: ${{ vars.POSITIONS_EVERY_MIN }}
           MIN_BALANCE_MON: ${{ vars.MIN_BALANCE_MON }}
           ARCHIVE_DIR: ${{ github.workspace }}/archive-out
           DRY_RUN: ${{ inputs.dry_run }}

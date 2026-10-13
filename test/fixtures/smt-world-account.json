@@ -1,0 +1,16 @@
+{
+  "generated_at": "2026-10-13T10:10:43+00:00",
+  "equity": "PRIVATE-MUST-NOT-LEAK",
+  "live": {
+    "open": [
+      { "pair": "BTC", "lane": "slow", "side": "LONG", "entry": 83764.8, "qty": "PRIVATE-MUST-NOT-LEAK", "leverage": 1, "opened_at": "2026-09-28T16:41:06.199152+00:00", "mark": "PRIVATE-MUST-NOT-LEAK", "upnl_pct": "PRIVATE-MUST-NOT-LEAK", "setup": "slow_trend", "setup_name": "Trend ride" },
+      { "pair": "LTC", "lane": "slow", "side": "LONG", "entry": 67.33, "qty": "PRIVATE-MUST-NOT-LEAK", "leverage": 1, "opened_at": "2026-09-29T01:39:48.303028+00:00", "mark": "PRIVATE-MUST-NOT-LEAK", "upnl_pct": "PRIVATE-MUST-NOT-LEAK", "setup": "slow_trend", "setup_name": "Trend ride" },
+      { "pair": "SOL", "lane": "slow", "side": "LONG", "entry": 119.75, "qty": "PRIVATE-MUST-NOT-LEAK", "leverage": 2, "opened_at": "2026-10-03T17:37:15.018057+00:00", "mark": "PRIVATE-MUST-NOT-LEAK", "upnl_pct": "PRIVATE-MUST-NOT-LEAK", "setup": "slow_trend", "setup_name": "Trend ride" }
+    ]
+  },
+  "paper": {
+    "open": [
+      { "pair": "ETH", "lane": "fast", "side": "SHORT", "entry": 1, "leverage": 1, "opened_at": "2026-10-13T09:00:00+00:00", "setup_name": "PAPER-MUST-NOT-BE-SEALED" }
+    ]
+  }
+}

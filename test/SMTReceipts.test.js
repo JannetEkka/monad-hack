@@ -311,6 +311,52 @@ describe("seam: real inputs", () => {
     expect(Number(st.calls) + Number(st.waits)).to.equal(8);
   });
 
+  it("SMT's live positions become a sealable snapshot: held side = call, nothing private, paper ignored", async () => {
+    const body = fs.readFileSync(path.join(__dirname, "fixtures", "smt-world-account.json"), "utf8");
+    const raw = rc.positionsSnapshot(body);
+    expect(raw).to.not.match(/MUST-NOT|PRIVATE|qty|mark|upnl|equity/);
+    const snap = JSON.parse(raw);
+    expect(Object.keys(snap)).to.have.members(rc.SMT_PAIRS);
+    expect(snap.BTC).to.deep.include({ action: "LONG", conf: 1, as_of: "2026-10-13T10:10:43+00:00", why: "held position, opened 2026-09-28 16:41 UTC by Trend ride" });
+    expect(snap.BTC.positions).to.deep.equal([
+      { pair: "BTC", side: "LONG", entry: 83764.8, opened_at: "2026-09-28T16:41:06.199152+00:00", setup_name: "Trend ride", lane: "slow", leverage: 1 },
+    ]);
+    expect(snap.SOL.why).to.equal("held position, opened 2026-10-03 17:37 UTC by Trend ride");
+    expect(snap.SOL.positions[0].leverage).to.equal(2);
+    expect(snap.ETH).to.deep.include({ action: "WAIT", conf: 0, why: "no live position", positions: [] }); // paper.open's ETH SHORT is not sealed
+
+    const s = rc.buildSeal(raw);
+    expect(s.receipts.filter((r) => r.dir !== rc.WAIT).map((r) => [r.pair, r.dir, r.confBps])).to.deep.equal([
+      ["BTC", rc.LONG, 10000], ["SOL", rc.LONG, 10000], ["LTC", rc.LONG, 10000],
+    ]);
+    expect(s.sourceTs).to.equal(Date.parse("2026-10-13T10:10:43Z") / 1000);
+    for (const r of s.receipts) expect(ethers.keccak256(ethers.toUtf8Bytes(rc.canonical({ pair: r.pair, call: snap[r.pair] })))).to.equal(r.reasonHash);
+
+    // a second publisher registers the positions agent next to the committee and seals it
+    const [p1, p2] = await ethers.getSigners();
+    const c = await deploy();
+    await c.connect(p1).registerAgent(rc.SMT_AGENT_NAME, rc.SMT_FEED_URL, rc.SMT_FEE_BPS, rc.smtFeedIds());
+    await c.connect(p2).registerAgent(rc.SMT_POSITIONS_NAME, rc.SMT_ACCOUNT_URL, rc.SMT_FEE_BPS, rc.smtFeedIds());
+    expect(await c.agentOf(p2.address)).to.equal(2n);
+    await time.setNextBlockTimestamp(Math.max(await time.latest(), s.sourceTs) + 120);
+    await expect(c.connect(p2).seal(...s.args)).to.emit(c, "Sealed");
+    const st = await c.stats(2);
+    expect([Number(st.calls), Number(st.waits)]).to.deep.equal([3, 5]);
+    expect(Number((await c.stats(1)).batches)).to.equal(0);
+  });
+
+  it("a hedged pair, an unknown pair or a bad account file never becomes a call", () => {
+    const acct = JSON.parse(fs.readFileSync(path.join(__dirname, "fixtures", "smt-world-account.json"), "utf8"));
+    acct.live.open.push({ ...acct.live.open[0], side: "SHORT", opened_at: "2026-10-01T00:00:00+00:00" });
+    acct.live.open.push({ pair: "PEPE", side: "LONG", opened_at: "2026-10-01T00:00:00+00:00", setup_name: "x" });
+    const snap = JSON.parse(rc.positionsSnapshot(JSON.stringify(acct)));
+    expect(snap.BTC).to.deep.include({ action: "WAIT", conf: 0, why: "hedged: a LONG and a SHORT are both open" });
+    expect(snap.BTC.positions.map((p) => p.side)).to.deep.equal(["LONG", "SHORT"]);
+    expect(snap).to.not.have.property("PEPE");
+    expect(() => rc.positionsSnapshot(JSON.stringify({ ...acct, generated_at: "soon" }))).to.throw(/generated_at/);
+    expect(() => rc.positionsSnapshot(JSON.stringify({ generated_at: acct.generated_at, paper: acct.paper }))).to.throw(/live\.open/);
+  });
+
   it("refuses a snapshot that is missing a pair", () => {
     const raw = fs.readFileSync(path.join(__dirname, "fixtures", "smt-world-decisions.json"), "utf8");
     const snap = JSON.parse(raw);

@@ -33,7 +33,8 @@
         SMT's AI committee publishes a call on eight coins every hour, with its reason in plain words.
         This page writes each call to Monad <b>before its entry price exists</b>, then grades it four hours later
         against prices RedStone's oracle signed at that exact second, checked by the contract itself.
-        WAITs are sealed too. Nobody can edit, delete or re-date a receipt. Not even us.
+        WAITs are sealed too, and so are the positions SMT actually holds, on their own scoreboard.
+        Nobody can edit, delete or re-date a receipt. Not even us.
       </p>
       <div class="hero-links">
         <a class="btn" href="#feed">See the receipts</a>
@@ -44,6 +45,8 @@
     <div id="banner" class="banner" hidden></div>
 
     <section id="scoreboard" class="block">
+      <div class="tabs" id="agents" role="tablist" aria-label="Which record"></div>
+      <p class="muted small agent-note" id="agentNote"></p>
       <div class="block-head">
         <h2>Scoreboard</h2>
         <p class="muted" id="scoreNote">A hit is a LONG or SHORT that beat the round-trip trading fee. An ungraded call counts as a miss.</p>
@@ -63,7 +66,7 @@
     <section id="feed" class="block">
       <div class="block-head">
         <h2>Latest receipts</h2>
-        <p class="muted">One slip per hourly snapshot: all eight coins, in the order SMT registered them. Tap a line for its reason and its proof.</p>
+        <p class="muted" id="feedNote">One slip per hourly snapshot: all eight coins, in the order SMT registered them. Tap a line for its reason and its proof.</p>
       </div>
       <div class="slips" id="slips"></div>
     </section>

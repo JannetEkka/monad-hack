@@ -1,11 +1,15 @@
 #!/usr/bin/env node
 // SMT Receipts keeper. One run:
-//   1. deploys the contract if its CREATE2 address is empty, registers SMT if it isn't yet;
-//   2. SEAL   - seals the newest public SMT World snapshot (all 8 pairs, WAITs included);
-//   3. GRADE  - grades every batch whose horizon has passed, with RedStone-signed prices;
-//   4. EXPIRE - closes batches nobody graded inside the window (they count as misses).
-// Every action is one log line starting with a tag: [DEPLOY] [REGISTER] [SEAL] [GRADE]
-// [EXPIRE] [BUDGET] [ERROR]. The key comes only from KEEPER_PRIVATE_KEY.
+//   1. deploys the contract if its CREATE2 address is empty;
+//   2. FUND   - tops up the positions agent's wallet from the keeper's;
+//   then for each agent, SMT World's committee calls and SMT's live positions:
+//   3. registers it if it isn't yet;
+//   4. SEAL   - seals its newest snapshot (all 8 pairs, WAITs included);
+//   5. GRADE  - grades every batch whose horizon has passed, with RedStone-signed prices;
+//   6. EXPIRE - closes batches nobody graded inside the window (they count as misses).
+// Every action is one log line starting with a tag: [DEPLOY] [FUND] [REGISTER] [SEAL] [GRADE]
+// [EXPIRE] [BUDGET] [ERROR]. The key comes only from KEEPER_PRIVATE_KEY; the positions
+// agent's key is derived from it, so there is still one secret.
 //
 //   node keeper/keeper.js            act
 //   node keeper/keeper.js --dry-run  read everything, build every transaction, send nothing
@@ -62,6 +66,18 @@ async function send(wallet, label, txReq) {
   return rcpt;
 }
 
+// The positions agent signs with a second key derived from the one secret, so it needs no
+// extra setup; the main keeper tops it up.
+const POSITIONS = (env.POSITIONS || "on") !== "off";
+const ACCOUNT_URL = env.ACCOUNT_URL || rc.SMT_ACCOUNT_URL;
+const FUND_BELOW = ethers.parseEther("0.2");
+const FUND_AMOUNT = ethers.parseEther("0.5");
+// A held position is the same bet hour after hour, so overlapping receipts would count one price
+// move several times. The positions agent seals once per horizon (windows that don't overlap),
+// and at once when the set of held positions changes. POSITIONS_EVERY_MIN overrides the cadence.
+const POSITIONS_EVERY_MIN = Number(env.POSITIONS_EVERY_MIN || Math.round(HORIZON / 60));
+const deriveKey = (key, label) => ethers.keccak256(ethers.concat([ethers.getBytes(key), ethers.toUtf8Bytes(label)]));
+
 async function main() {
   // cacheTimeout -1: ethers otherwise answers a repeated read from a 250 ms cache, which hides
   // a contract deployed a moment ago
@@ -82,8 +98,9 @@ async function main() {
   const balance0 = await provider.getBalance(wallet.address);
   say(`keeper ${wallet.address} · balance ${ethers.formatEther(balance0)} MON · contract ${address}`);
 
-  // ── 1. deploy + register (idempotent) ──────────────────────────────────────────────────
-  const deployed = (await provider.getCode(address)) !== "0x";
+  // ── 1. deploy (idempotent) ──────────────────────────────────────────────────────────────
+  let deployed = (await provider.getCode(address)) !== "0x";
+  let sentThisPass = false;
   if (!deployed) {
     say(`[DEPLOY] no code at ${address}: deploying through the CREATE2 proxy`);
     const r = await send(wallet, "deploy", { to: rc.CREATE2_PROXY, data: ethers.concat([rc.SALT, initCode]) });
@@ -92,53 +109,108 @@ async function main() {
         throw new Error(`deploy mined (status ${r.status}, ${r.gasUsed} gas, block ${r.blockNumber}) but there is no code at ${address}`);
       }
       say(`[DEPLOY] ✅ ${address} · tx ${EXPLORER}/tx/${r.hash}`);
-    }
-  }
-  let agentId = deployed || !DRY ? Number(await c.agentOf(wallet.address)) : 0;
-  if (agentId === 0) {
-    const args = [rc.SMT_AGENT_NAME, FEED_URL, rc.SMT_FEE_BPS, rc.smtFeedIds()];
-    if (deployed || !DRY) {
-      const r = await send(wallet, "registerAgent", { to: address, data: c.interface.encodeFunctionData("registerAgent", args) });
-      if (r) {
-        agentId = Number(await c.agentOf(wallet.address));
-        say(`[REGISTER] ✅ agent ${agentId} "${rc.SMT_AGENT_NAME}" · ${rc.SMT_PAIRS.join(" ")} · fee ${rc.SMT_FEE_BPS} bp`);
-      }
-    } else {
-      say(`  (dry run) would register "${rc.SMT_AGENT_NAME}" for ${rc.SMT_PAIRS.join(" ")}`);
+      deployed = true;
+      sentThisPass = true;
     }
   }
 
-  // ── 2. seal ─────────────────────────────────────────────────────────────────────────────
-  try {
-    await sealStep({ provider, wallet, c, address, agentId, balance: balance0 });
-  } catch (e) {
-    fail(`seal: ${e.shortMessage || e.message}`);
-  }
-
-  // ── 3 + 4. grade / expire ────────────────────────────────────────────────────────────────
-  if (agentId !== 0) {
+  const tracks = [
+    { key: "committee", name: rc.SMT_AGENT_NAME, label: "SMT World's committee", url: FEED_URL, wallet, everyMin: SEAL_EVERY_MIN, toRaw: (body) => body },
+  ];
+  if (POSITIONS) {
+    const pw = new ethers.Wallet(deriveKey(wallet.privateKey, "smt-receipts/positions"), provider);
+    tracks.push({
+      key: "positions",
+      name: rc.SMT_POSITIONS_NAME,
+      label: "SMT's account",
+      url: ACCOUNT_URL,
+      wallet: pw,
+      everyMin: POSITIONS_EVERY_MIN,
+      sealOnChange: true,
+      toRaw: (body) => rc.positionsSnapshot(body),
+    });
+    // ── 2. fund the positions wallet. Monad lets an account under its 10 MON reserve send
+    // value only as its first transaction in a few blocks, so this goes before anything else.
     try {
-      await gradeStep({ provider, wallet, c, agentId });
+      await fundStep({ provider, from: wallet, to: pw, skip: sentThisPass });
     } catch (e) {
-      fail(`grade: ${e.shortMessage || e.message}`);
+      fail(`fund: ${e.shortMessage || e.message}`);
+    }
+  }
+
+  for (const t of tracks) {
+    const ct = c.connect(t.wallet);
+    if (t.wallet !== wallet && !DRY && (await provider.getBalance(t.wallet.address)) === 0n) {
+      say(`[FUND] ${t.key} wallet ${t.wallet.address} is not funded yet: its track starts on the next pass`);
+      continue;
+    }
+    // ── 3. register (idempotent) ───────────────────────────────────────────────────────────
+    let agentId = deployed ? Number(await ct.agentOf(t.wallet.address)) : 0;
+    if (agentId === 0) {
+      const args = [t.name, t.url, rc.SMT_FEE_BPS, rc.smtFeedIds()];
+      if (deployed) {
+        try {
+          const r = await send(t.wallet, `registerAgent ${t.key}`, { to: address, data: ct.interface.encodeFunctionData("registerAgent", args) });
+          if (r) {
+            agentId = Number(await ct.agentOf(t.wallet.address));
+            say(`[REGISTER] ✅ agent ${agentId} "${t.name}" · ${t.wallet.address} · ${rc.SMT_PAIRS.join(" ")} · fee ${rc.SMT_FEE_BPS} bp`);
+          }
+        } catch (e) {
+          fail(`register ${t.key}: ${e.shortMessage || e.message}`);
+          continue;
+        }
+      } else {
+        say(`  (dry run) would register "${t.name}" for ${rc.SMT_PAIRS.join(" ")}`);
+      }
+    }
+    // ── 4. seal ─────────────────────────────────────────────────────────────────────────────
+    try {
+      await sealStep({ provider, track: t, c: ct, address, agentId, balance: await provider.getBalance(t.wallet.address) });
+    } catch (e) {
+      fail(`seal ${t.key}: ${e.shortMessage || e.message}`);
+    }
+    // ── 5 + 6. grade / expire ────────────────────────────────────────────────────────────────
+    if (agentId !== 0) {
+      try {
+        await gradeStep({ provider, wallet: t.wallet, c: ct, agentId, label: t.key });
+      } catch (e) {
+        fail(`grade ${t.key}: ${e.shortMessage || e.message}`);
+      }
     }
   }
 
   const balance1 = await provider.getBalance(wallet.address);
-  say(`balance ${ethers.formatEther(balance1)} MON (spent ${ethers.formatEther(balance0 - balance1)} this run)`);
+  say(`balance ${ethers.formatEther(balance1)} MON (spent ${ethers.formatEther(balance0 - balance1)} this run, positions top-up included)`);
   if (balance1 < MIN_BALANCE) {
     say(`[BUDGET] ⚠️ balance below ${ethers.formatEther(MIN_BALANCE)} MON: sealing pauses until the keeper is topped up (grading continues)`);
   }
 }
 
-async function sealStep({ provider, wallet, c, address, agentId, balance }) {
-  if (balance < MIN_BALANCE && !DRY) {
-    say(`[SEAL] skipped: balance ${ethers.formatEther(balance)} MON is under ${ethers.formatEther(MIN_BALANCE)} MON, kept for grading`);
+async function fundStep({ provider, from, to, skip }) {
+  const have = await provider.getBalance(to.address);
+  if (have >= FUND_BELOW) return;
+  if (skip) {
+    say(`[FUND] positions wallet ${to.address} has ${ethers.formatEther(have)} MON; topping up on the next pass (the keeper already sent a transaction in this one)`);
     return;
   }
-  const res = await fetch(FEED_URL, { cache: "no-store", signal: AbortSignal.timeout(20_000) });
-  if (!res.ok) throw new Error(`SMT World feed answered HTTP ${res.status}`);
-  const raw = await res.text();
+  const mine = await provider.getBalance(from.address);
+  if (mine - FUND_AMOUNT < MIN_BALANCE * 2n) {
+    say(`[BUDGET] ⚠️ can't top up the positions wallet: the keeper has ${ethers.formatEther(mine)} MON`);
+    return;
+  }
+  const r = await send(from, "fund positions wallet", { to: to.address, value: FUND_AMOUNT });
+  if (r) say(`[FUND] ✅ ${ethers.formatEther(FUND_AMOUNT)} MON → positions wallet ${to.address} · ${EXPLORER}/tx/${r.hash}`);
+}
+
+async function sealStep({ provider, track, c, address, agentId, balance }) {
+  const wallet = track.wallet;
+  if (balance < MIN_BALANCE && !DRY) {
+    say(`[SEAL] ${track.key} skipped: balance ${ethers.formatEther(balance)} MON is under ${ethers.formatEther(MIN_BALANCE)} MON, kept for grading`);
+    return;
+  }
+  const res = await fetch(track.url, { cache: "no-store", signal: AbortSignal.timeout(20_000) });
+  if (!res.ok) throw new Error(`${track.url} answered HTTP ${res.status}`);
+  const raw = track.toRaw(await res.text());
   const fetchedAt = new Date().toISOString();
   const s = rc.buildSeal(raw, { horizon: HORIZON });
   const now = (await provider.getBlock("latest")).timestamp;
@@ -146,33 +218,37 @@ async function sealStep({ provider, wallet, c, address, agentId, balance }) {
   const last = agentId ? Number((await c.agent(agentId)).lastSourceTs) : 0;
   const calls = s.receipts
     .filter((r) => r.dir !== rc.WAIT)
-    .map((r) => `${r.pair} ${rc.DIR_NAME[r.dir]} ${pct(r.confBps)}`);
+    .map((r) => (track.key === "positions" ? `${r.pair} ${rc.DIR_NAME[r.dir]} held` : `${r.pair} ${rc.DIR_NAME[r.dir]} ${pct(r.confBps)}`));
   const line = `${calls.length ? calls.join(", ") : "all WAIT"} (${8 - calls.length} WAIT)`;
 
   if (s.sourceTs <= last) {
-    say(`[SEAL] skipped: SMT World has not published since the last seal (as_of ${iso(s.sourceTs)}, ${ageMin} min old)`);
+    say(`[SEAL] ${track.key} skipped: ${track.label} has not published since the last seal (as_of ${iso(s.sourceTs)}, ${ageMin} min old)`);
     return;
   }
-  if (last && s.sourceTs - last < SEAL_EVERY_MIN * 60) {
-    say(`[SEAL] skipped: last seal was ${Math.round((s.sourceTs - last) / 60)} min of SMT time ago; sealing every ${SEAL_EVERY_MIN} min`);
-    return;
+  if (last && s.sourceTs - last < track.everyMin * 60) {
+    const changed = track.sealOnChange && (await lastDirs(c, agentId)) !== dirsOf(s.receipts);
+    if (!changed) {
+      say(`[SEAL] ${track.key} skipped: last seal was ${Math.round((s.sourceTs - last) / 60)} min of SMT time ago; sealing every ${track.everyMin} min${track.sealOnChange ? " or when a position opens or closes" : ""}`);
+      return;
+    }
+    say(`[SEAL] ${track.key}: the held positions changed since the last seal, sealing now`);
   }
   if (now - s.sourceTs > 3 * 3600 - 120) {
-    say(`[SEAL] skipped: ⚠️ the SMT World snapshot is ${ageMin} min old; a receipt has to be fresh (≤ 3 h). Is the bot publishing?`);
+    say(`[SEAL] ${track.key} skipped: ⚠️ the snapshot is ${ageMin} min old; a receipt has to be fresh (≤ 3 h). Is the bot publishing?`);
     return;
   }
   if (!agentId) {
-    say(`  (dry run) would seal as_of ${iso(s.sourceTs)}: ${line}`);
+    say(`  (dry run) would seal ${track.key} as_of ${iso(s.sourceTs)}: ${line}`);
     return;
   }
-  const r = await send(wallet, "seal", { to: await c.getAddress(), data: c.interface.encodeFunctionData("seal", s.args) });
+  const r = await send(wallet, `seal ${track.key}`, { to: await c.getAddress(), data: c.interface.encodeFunctionData("seal", s.args) });
   if (!r) {
-    say(`  (dry run) would seal as_of ${iso(s.sourceTs)}: ${line}`);
+    say(`  (dry run) would seal ${track.key} as_of ${iso(s.sourceTs)}: ${line}`);
     return;
   }
   const ev = r.logs.map((l) => safeParse(c, l)).find((e) => e && e.name === "Sealed");
   const batchId = Number(ev.args.batchId);
-  say(`[SEAL] ✅ batch ${batchId} · as_of ${iso(s.sourceTs)} · ${line} · entry ${iso(ev.args.entryTs)} → exit ${iso(ev.args.exitTs)} · ${EXPLORER}/tx/${r.hash}`);
+  say(`[SEAL] ✅ ${track.key} batch ${batchId} · as_of ${iso(s.sourceTs)} · ${line} · entry ${iso(ev.args.entryTs)} → exit ${iso(ev.args.exitTs)} · ${EXPLORER}/tx/${r.hash}`);
 
   fs.mkdirSync(path.join(ARCHIVE_DIR, "batches"), { recursive: true });
   const record = {
@@ -181,18 +257,19 @@ async function sealStep({ provider, wallet, c, address, agentId, balance }) {
     contract: address,
     batchId,
     agentId,
+    track: track.key,
     txHash: r.hash,
     sealBlock: r.blockNumber,
     entryTs: Number(ev.args.entryTs),
     exitTs: Number(ev.args.exitTs),
     horizon: HORIZON,
-    source: { url: FEED_URL, fetchedAt, sourceTs: s.sourceTs, snapshotHash: s.snapshotHash, raw },
+    source: { url: track.url, fetchedAt, sourceTs: s.sourceTs, snapshotHash: s.snapshotHash, raw },
     receipts: s.receipts.map(({ pair, dir, confBps, reasonHash, canonical }) => ({ pair, dir, confBps, reasonHash, canonical })),
   };
   fs.writeFileSync(path.join(ARCHIVE_DIR, "batches", `${batchId}.json`), JSON.stringify(record, null, 1) + "\n");
 }
 
-async function gradeStep({ provider, wallet, c, agentId }) {
+async function gradeStep({ provider, wallet, c, agentId, label = "" }) {
   const count = Number(await c.batchCount());
   const now = (await provider.getBlock("latest")).timestamp;
   const window = Number(await c.GRADE_WINDOW());
@@ -234,20 +311,32 @@ async function gradeStep({ provider, wallet, c, agentId }) {
         const net = Number(ev.args.netPpm[k]);
         return `${sym} ${net > 0 ? "✓" : "✗"} ${bp(net)} net`;
       });
-      say(`[GRADE] ✅ batch ${id} · ${parts.join(", ")} · ${EXPLORER}/tx/${r.hash}`);
+      say(`[GRADE] ✅ ${label} batch ${id} · ${parts.join(", ")} · ${EXPLORER}/tx/${r.hash}`);
     } catch (e) {
       fail(`grade batch ${id}: ${e.shortMessage || e.message}`);
     }
   }
-  say(`[GRADE] ${pending} batch(es) still inside their horizon`);
+  say(`[GRADE] ${label}: ${pending} batch(es) still inside their horizon`);
   const st = await c.stats(agentId);
   const scored = Number(st.graded) + Number(st.expired);
   if (scored > 0) {
     say(
-      `scoreboard: ${st.hits}/${scored} hits net of fees (${((100 * Number(st.hits)) / scored).toFixed(1)}%) · ` +
+      `scoreboard ${label}: ${st.hits}/${scored} hits net of fees (${((100 * Number(st.hits)) / scored).toFixed(1)}%) · ` +
         `avg ${bp(Number(st.sumNetPpm) / scored)} per call · ${st.expired} expired · ${st.waits} waits · ${st.batches} batches`
     );
   }
+}
+
+// The 2-bit directions word a Batch stores, for comparing a snapshot with the last seal.
+const dirsOf = (receipts) => receipts.reduce((acc, r, i) => acc | (r.dir << (2 * i)), 0);
+
+async function lastDirs(c, agentId) {
+  const count = Number(await c.batchCount());
+  for (let id = count - 1; id >= Math.max(0, count - LOOKBACK); id--) {
+    const [b] = await c.batch(id);
+    if (Number(b.agentId) === agentId) return Number(b.dirs);
+  }
+  return -1;
 }
 
 function safeParse(c, log) {
