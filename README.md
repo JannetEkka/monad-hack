@@ -11,6 +11,9 @@ Built for [Monad Metropolis](https://monad.xyz/metropolis), track **Onchain Fina
 | Keeper runs | [Actions → keeper](../../actions/workflows/keeper.yml) (hourly) |
 | Archived snapshots | [`archive` branch](../../tree/archive/batches) |
 | Indexer | Envio HyperIndex, [`indexer/`](indexer/) |
+| Demo video (1:48) | https://youtu.be/7IpMa2UPJPk |
+| Pitch video (1:51) | https://youtu.be/KYqEICJNxeA |
+| Submitted | Monad Metropolis, 2026-10-14 |
 
 ## The problem
 
