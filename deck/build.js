@@ -16,9 +16,15 @@ async function live() {
   try {
     const p = new ethers.JsonRpcProvider(process.env.MONAD_RPC_URL || "https://testnet-rpc.monad.xyz", 10143, { staticNetwork: true });
     if ((await p.getCode(dep.address)) === "0x") return null;
-    const c = new ethers.Contract(dep.address, ["function stats(uint256) view returns (uint32,uint32,uint32,uint32,uint32,uint32,int64)", "function batchCount() view returns (uint256)"], p);
-    const [batches, calls, waits, graded, hits, expired, sumNet] = (await c.stats(1)).map(Number);
-    return { batches, calls, waits, graded, hits, expired, sumNet };
+    const c = new ethers.Contract(dep.address, ["function stats(uint256) view returns (uint32,uint32,uint32,uint32,uint32,uint32,int64)", "function agentCount() view returns (uint256)"], p);
+    // agent 1 = SMT World's committee calls, agent 2 = the positions SMT holds
+    const n = Number(await c.agentCount());
+    const out = [];
+    for (let id = 1; id <= Math.min(n, 2); id++) {
+      const [batches, calls, waits, graded, hits, expired, sumNet] = (await c.stats(id)).map(Number);
+      out.push({ id, batches, calls, waits, graded, hits, expired, sumNet });
+    }
+    return out.length ? out : null;
   } catch {
     return null;
   }
@@ -26,15 +32,20 @@ async function live() {
 
 const slide = (cls, inner) => `<section class="slide ${cls}">${inner}<footer><img src="img/logo.png" alt=""><span>SMT Receipts · Monad Metropolis</span></footer></section>`;
 
-function html(L) {
-  const scored = L ? L.graded + L.expired : 0;
-  const liveBlock = L
-    ? `<div class="kpis">
-        <div><b>${L.batches}</b><span>hourly snapshots sealed</span></div>
-        <div><b>${L.calls + L.waits}</b><span>calls on the record, ${L.waits} of them WAIT</span></div>
-        <div><b>${scored}</b><span>LONG/SHORT calls graded${L.expired ? `, ${L.expired} expired` : ""}</span></div>
+const kpiRow = (L, title, what) => {
+  const scored = L.graded + L.expired;
+  return `<div class="row-title">${title}</div><div class="kpis">
+        <div><b>${L.batches}</b><span>snapshots sealed</span></div>
+        <div><b>${L.calls}</b><span>${what}, plus ${L.waits} WAITs</span></div>
+        <div><b>${scored}</b><span>graded${L.expired ? `, ${L.expired} expired` : ""}, ${L.calls - scored} pending</span></div>
         <div><b>${scored ? ((100 * L.hits) / scored).toFixed(0) + "%" : "–"}</b><span>beat the 12 bp fee${scored ? `, avg ${(L.sumNet / scored / 100).toFixed(1)} bp` : ""}</span></div>
-      </div>
+      </div>`;
+};
+
+function html(A) {
+  const liveBlock = A
+    ? `${kpiRow(A[0], "Committee calls · advisory, every hour", "LONG/SHORT calls")}
+      ${A[1] ? kpiRow(A[1], "Held positions · what SMT actually holds, every 4 h", "held positions") : ""}
       <p class="sub">Read from the contract at ${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC. Good or bad, it's the number on the chain.</p>`
     : `<p class="big">The contract address is fixed by its code: <code>${dep.address}</code>. The keeper deploys it, then seals every hour.</p>`;
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>SMT Receipts deck</title>
@@ -58,8 +69,9 @@ footer img{width:40px;height:40px}
 .steps div{background:var(--navy2);border:2px solid var(--line);border-radius:22px;padding:34px 32px;font-size:28px;color:#c9d7ee}
 .steps b{display:block;font:800 40px Manrope,sans-serif;color:var(--gold);margin:14px 0 10px}.steps i{font:800 30px Manrope;font-style:normal;background:var(--gold);color:var(--navy);border-radius:50%;width:52px;height:52px;display:inline-grid;place-items:center}
 table{border-collapse:collapse;width:100%;font-size:30px}td{padding:20px 22px;border-bottom:2px solid var(--line);vertical-align:top;color:#c9d7ee}td:first-child{color:var(--gold2);font-weight:700;width:330px}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:26px;margin:20px 0 40px}.kpis div{background:var(--navy2);border:2px solid var(--line);border-radius:22px;padding:34px}
-.kpis b{display:block;font:800 92px/1 Manrope,sans-serif;color:var(--gold);margin-bottom:14px}.kpis span{font-size:26px;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin:12px 0 30px}.kpis div{background:var(--navy2);border:2px solid var(--line);border-radius:22px;padding:24px 30px}
+.kpis b{display:block;font:800 72px/1 Manrope,sans-serif;color:var(--gold);margin-bottom:10px}.kpis span{font-size:24px;color:var(--muted)}
+.row-title{font:700 24px/1 "JetBrains Mono",monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--gold2)}
 .shot{position:absolute;right:120px;top:150px;width:900px;border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,.6)}
 .split p,.split li{max-width:760px}
 .links p{font:600 38px "JetBrains Mono",monospace;color:var(--gold2)}
@@ -75,7 +87,7 @@ ${slide("", `<div class="eyebrow">Who's building it</div><h2>One builder, one bo
 <li>Came <b>#1 of 230+ teams</b> in the WEEX AI Wars preliminary, then lost the final. I said so in public, and that is what got the exchange's attention.</li>
 <li>Google Cloud AI engineer, 4+ years at Deloitte before that. Provisional patent filed in India (2026).</li></ul>`)}
 ${slide("split", `<div class="eyebrow">The product</div><h2>One receipt per hour.</h2>
-<ul><li>All 8 coins on every slip, <b>WAITs included</b>.</li><li>Tap a line: the call, SMT's reason, the seal and grade transactions.</li><li><b>Verify</b> recomputes the hashes in your browser.</li></ul>
+<ul><li>All 8 coins on every slip, <b>WAITs included</b>.</li><li>Tap a line: the call, SMT's reason, the seal and grade transactions.</li><li><b>Verify</b> recomputes the hashes in your browser.</li><li>Two records: the committee's calls, and the <b>positions SMT actually holds</b>.</li></ul>
 <img class="shot" src="img/page-detail.png" alt="">`)}
 ${slide("", `<div class="eyebrow">How it works</div><h2>Publish, seal, price, grade.</h2><div class="steps">
 <div><i>1</i><b>Publish</b>SMT World posts the committee's call on 8 coins every hour: LONG, SHORT or WAIT, a conviction and the reason.</div>
@@ -95,7 +107,7 @@ ${slide("", `<div class="eyebrow">Live on Monad testnet</div><h2>The record so f
 ${slide("", `<div class="eyebrow">Where it goes</div><h2>Receipts are the trust layer for SMT World.</h2>
 <ul><li><b>SMT World</b> is what exchanges buy: their users sign in with their exchange account, arrive funded, and the affiliate fee is split.</li>
 <li>A user copying a bot should be able to check its record. Receipts make that a link, not a promise.</li>
-<li>The registry is open: any trading agent can register and get a record it can't edit. Next: receipts inside SMT World, mainnet, a second agent.</li></ul>`)}
+<li>The registry is open: any trading agent can register and get a record it can't edit. Next: receipts inside SMT World, mainnet, and other bots on the same registry.</li></ul>`)}
 ${slide("links", `<div class="eyebrow">Try it</div><h2>Every call, sealed before the market moves.</h2>
 <p>${PAGE}</p><p>${REPO}</p><p>contract ${short(dep.address)} on Monad testnet (chain 10143)</p>`)}
 </body></html>`;
