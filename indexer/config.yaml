@@ -19,12 +19,26 @@ chains:
   - id: 10143
     # the contract's deploy block (the first block with code at its CREATE2 address)
     start_block: 70662788
-    # Monad's public RPC as the only source: Envio Cloud's HyperSync for this chain never
-    # returned a block height (10-14), and the RPC needs no key. It answers eth_getLogs for
-    # 100 blocks and refuses 500 (413 Payload Too Large), so requests stay at 100 blocks.
+    # Three RPC sources, tried in this order. Envio Cloud's default source for this chain never
+    # returned a block height (10-14), and a deployment pointed only at Monad's public RPC got
+    # no height either, so the primary is Envio's own HyperRPC (the project's ENVIO_API_TOKEN as
+    # a bearer header) and two public RPCs are the fallbacks. Both public ones answer eth_getLogs
+    # for 100 blocks (Monad's refuses 500 with 413), so they stay at 100.
     rpc:
-      - url: https://testnet-rpc.monad.xyz
+      - url: https://10143.rpc.hypersync.xyz
         for: sync
+        headers:
+          Authorization: "Bearer ${ENVIO_API_TOKEN}"
+        initial_block_interval: 100
+        interval_ceiling: 1000
+        acceleration_additive: 100
+      - url: https://rpc.ankr.com/monad_testnet
+        for: fallback
+        initial_block_interval: 100
+        interval_ceiling: 100
+        acceleration_additive: 0
+      - url: https://testnet-rpc.monad.xyz
+        for: fallback
         initial_block_interval: 100
         interval_ceiling: 100
         acceleration_additive: 0
