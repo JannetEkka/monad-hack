@@ -9,9 +9,11 @@ Indexes `SMTReceipts` on Monad testnet (chain 10143) at `0xDF9f42AE4f81F086F8495
 | `Graded` | each `Receipt`'s signed entry/exit price, move and net result |
 | `Expired` | the batch's LONG/SHORT receipts, marked as misses |
 
-Hosted on Envio Cloud (development plan), deployed from the `envio` branch:
-`https://indexer.dev.hyperindex.xyz/72cc994/v1/graphql`. The page uses it with
-`https://jannetekka.github.io/monad-hack/?envio=<endpoint>`.
+Hosted on Envio Cloud (development plan), deployed from the `envio` branch; every push there is a new
+deployment with its own endpoint. Envio 3.14 reads HyperSync only with an API token, so the project
+sets `ENVIO_API_TOKEN` under Environment Variables (a free token from envio.dev/app/api-tokens).
+Without it the indexer stops right after "Starting indexing!" and its endpoint answers 503.
+The page uses an endpoint via `web/config.js` (`envioGraphql`) or `?envio=<endpoint>`.
 
 ```bash
 pnpm install && pnpm codegen && pnpm test   # Vitest, createTestIndexer
