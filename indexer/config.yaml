@@ -17,7 +17,17 @@ contracts:
       - event: Expired(uint256 indexed batchId, uint256 indexed agentId, uint8 missed)
 chains:
   - id: 10143
-    start_block: 68750000
+    # the contract's deploy block (the first block with code at its CREATE2 address)
+    start_block: 70662788
+    # Monad's public RPC as the only source: Envio Cloud's HyperSync for this chain never
+    # returned a block height (10-14), and the RPC needs no key. It answers eth_getLogs for
+    # 100 blocks and refuses 500 (413 Payload Too Large), so requests stay at 100 blocks.
+    rpc:
+      - url: https://testnet-rpc.monad.xyz
+        for: sync
+        initial_block_interval: 100
+        interval_ceiling: 100
+        acceleration_additive: 0
     contracts:
       - name: SMTReceipts
         address:

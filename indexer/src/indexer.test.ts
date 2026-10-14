@@ -24,7 +24,7 @@ describe("SMT Receipts indexer", () => {
   it("builds the agent, batches, receipts and per-pair scoreboard from the four events", async () => {
     const indexer = createTestIndexer();
     const T = 1_791_300_000;
-    const B = 68_750_000; // config.yaml start_block
+    const B = 70_662_788; // config.yaml start_block (the contract's deploy block)
     await indexer.process({
       chains: {
         10143: {
