@@ -1,0 +1,78 @@
+{
+ "schema": 1,
+ "chainId": 10143,
+ "contract": "0xDF9f42AE4f81F086F8495c5a5339dDaa90057993",
+ "batchId": 53,
+ "agentId": 2,
+ "track": "positions",
+ "txHash": "0x0d07532759271a584fc3bc76c47a44fd3bfd2fa41d0bc6d9e765808979b08684",
+ "sealBlock": 71534115,
+ "entryTs": 1792153030,
+ "exitTs": 1792167430,
+ "horizon": 14400,
+ "source": {
+  "url": "https://smt-weex-trading-bot.jannet-ekka.workers.dev/account.json",
+  "fetchedAt": "2026-10-16T12:17:05.687Z",
+  "sourceTs": 1792152621,
+  "snapshotHash": "0x389560820e5ce0412b2946c754b36f0f4cafb8d21a54d1a9face55de0f6f6a02",
+  "raw": "{\"ADA\":{\"action\":\"WAIT\",\"as_of\":\"2026-10-16T12:10:21+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"BNB\":{\"action\":\"WAIT\",\"as_of\":\"2026-10-16T12:10:21+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"BTC\":{\"action\":\"WAIT\",\"as_of\":\"2026-10-16T12:10:21+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"DOGE\":{\"action\":\"WAIT\",\"as_of\":\"2026-10-16T12:10:21+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"ETH\":{\"action\":\"WAIT\",\"as_of\":\"2026-10-16T12:10:21+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"LTC\":{\"action\":\"LONG\",\"as_of\":\"2026-10-16T12:10:21+00:00\",\"conf\":1,\"positions\":[{\"entry\":58.1,\"lane\":\"slow\",\"leverage\":2,\"opened_at\":\"2026-10-15T07:34:07.412934+00:00\",\"pair\":\"LTC\",\"setup_name\":\"Trend ride\",\"side\":\"LONG\"}],\"why\":\"held position, opened 2026-10-15 07:34 UTC by Trend ride\"},\"SOL\":{\"action\":\"WAIT\",\"as_of\":\"2026-10-16T12:10:21+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"XRP\":{\"action\":\"WAIT\",\"as_of\":\"2026-10-16T12:10:21+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"}}"
+ },
+ "receipts": [
+  {
+   "pair": "BTC",
+   "dir": 0,
+   "confBps": 0,
+   "reasonHash": "0xda044cbf2bc23f8aebcfbfb11a123eacde54c9169f5439c57d60985dd124f863",
+   "canonical": "{\"call\":{\"action\":\"WAIT\",\"as_of\":\"2026-10-16T12:10:21+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"pair\":\"BTC\"}"
+  },
+  {
+   "pair": "ETH",
+   "dir": 0,
+   "confBps": 0,
+   "reasonHash": "0xb4d0661a6a6943452ee2e4726e631b3314bd8772756fc13303c8ad24007add3c",
+   "canonical": "{\"call\":{\"action\":\"WAIT\",\"as_of\":\"2026-10-16T12:10:21+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"pair\":\"ETH\"}"
+  },
+  {
+   "pair": "SOL",
+   "dir": 0,
+   "confBps": 0,
+   "reasonHash": "0xcb5aceaea7b68b76a3d0934232417383c7354eb18dd45c073e6d8fe748e1383d",
+   "canonical": "{\"call\":{\"action\":\"WAIT\",\"as_of\":\"2026-10-16T12:10:21+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"pair\":\"SOL\"}"
+  },
+  {
+   "pair": "BNB",
+   "dir": 0,
+   "confBps": 0,
+   "reasonHash": "0x1db9a2083f42261049d1af98ef1d7932c9a4ded7b42b0016cce02a3cca39d6bf",
+   "canonical": "{\"call\":{\"action\":\"WAIT\",\"as_of\":\"2026-10-16T12:10:21+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"pair\":\"BNB\"}"
+  },
+  {
+   "pair": "XRP",
+   "dir": 0,
+   "confBps": 0,
+   "reasonHash": "0x213a562bcc625054ee9cd1ff529a97b9c16815602ebf8e7a895d19e2e8ca33ff",
+   "canonical": "{\"call\":{\"action\":\"WAIT\",\"as_of\":\"2026-10-16T12:10:21+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"pair\":\"XRP\"}"
+  },
+  {
+   "pair": "DOGE",
+   "dir": 0,
+   "confBps": 0,
+   "reasonHash": "0x318e4617633307271302b96173c30ca9c8e4a37daab66a26f243ca76c3417c3c",
+   "canonical": "{\"call\":{\"action\":\"WAIT\",\"as_of\":\"2026-10-16T12:10:21+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"pair\":\"DOGE\"}"
+  },
+  {
+   "pair": "LTC",
+   "dir": 1,
+   "confBps": 10000,
+   "reasonHash": "0xcad31f3b6463a7bd3e6734daedd10bfe8cc3e8a7fff33220bc83e20b7c395e57",
+   "canonical": "{\"call\":{\"action\":\"LONG\",\"as_of\":\"2026-10-16T12:10:21+00:00\",\"conf\":1,\"positions\":[{\"entry\":58.1,\"lane\":\"slow\",\"leverage\":2,\"opened_at\":\"2026-10-15T07:34:07.412934+00:00\",\"pair\":\"LTC\",\"setup_name\":\"Trend ride\",\"side\":\"LONG\"}],\"why\":\"held position, opened 2026-10-15 07:34 UTC by Trend ride\"},\"pair\":\"LTC\"}"
+  },
+  {
+   "pair": "ADA",
+   "dir": 0,
+   "confBps": 0,
+   "reasonHash": "0xc1f3b8f9a37dada644b7648af73a0cb1006308d92ba2bbfb1b089d0e02a296e7",
+   "canonical": "{\"call\":{\"action\":\"WAIT\",\"as_of\":\"2026-10-16T12:10:21+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"pair\":\"ADA\"}"
+  }
+ ]
+}
