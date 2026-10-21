@@ -22,9 +22,9 @@ window.SMT_RECEIPTS = {
     },
   ],
   explorer: "https://testnet.monadvision.com",
-  // Envio Cloud GraphQL endpoint. Empty = read the chain directly (the page says so).
-  // A ?envio=<url> query parameter overrides it.
-  envioGraphql: "",
+  // Envio Cloud GraphQL endpoint (deployment eb5fcaa). Empty = read the chain directly (the
+  // page says so). A ?envio=<url> query parameter overrides it.
+  envioGraphql: "https://indexer.dev.hyperindex.xyz/e5478c3/v1/graphql",
   archive: "https://raw.githubusercontent.com/JannetEkka/monad-hack/archive/batches/",
   repo: "https://github.com/JannetEkka/monad-hack",
   smtWorld: "https://smt-weex-trading-bot.jannet-ekka.workers.dev/",

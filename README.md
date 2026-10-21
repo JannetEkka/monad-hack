@@ -10,7 +10,7 @@ Built for [Monad Metropolis](https://monad.xyz/metropolis), track **Onchain Fina
 | Contract (Monad testnet, chain 10143) | [`0xDF9f42AE4f81F086F8495c5a5339dDaa90057993`](https://testnet.monadvision.com/address/0xDF9f42AE4f81F086F8495c5a5339dDaa90057993) |
 | Keeper runs | [Actions → keeper](../../actions/workflows/keeper.yml) (hourly) |
 | Archived snapshots | [`archive` branch](../../tree/archive/batches) |
-| Indexer | Envio HyperIndex, [`indexer/`](indexer/) |
+| Indexer | Envio HyperIndex, [`indexer/`](indexer/), GraphQL at https://indexer.dev.hyperindex.xyz/e5478c3/v1/graphql |
 | Demo video (1:48) | https://youtu.be/7IpMa2UPJPk |
 | Pitch video (1:51) | https://youtu.be/KYqEICJNxeA |
 | Submitted | Monad Metropolis, 2026-10-14 |
