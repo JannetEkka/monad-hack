@@ -1,0 +1,23 @@
+# Keeps the hosted Envio indexer awake while the hackathon is judged. Envio Cloud shuts a
+# dev-plan deployment down after 7 days with no GraphQL requests, and the page reads the
+# chain directly (web/config.js leaves envioGraphql empty), so nothing else queries it.
+# One query every 6 hours leaves plenty of slack for GitHub's best-effort cron. A red run
+# means the endpoint stopped answering.
+name: envio-ping
+on:
+  schedule:
+    - cron: "43 */6 * * *"
+  workflow_dispatch:
+permissions: {}
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Query the indexer
+        env:
+          ENVIO_GRAPHQL: https://indexer.dev.hyperindex.xyz/7c24c7b/v1/graphql
+        run: |
+          curl -fsS --retry 3 --retry-delay 10 --max-time 30 "$ENVIO_GRAPHQL" \
+            -H 'content-type: application/json' \
+            -d '{"query":"{ _meta { progressBlock sourceBlock isReady } Agent { id batches } }"}'
