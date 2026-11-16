@@ -1,0 +1,78 @@
+{
+ "schema": 1,
+ "chainId": 10143,
+ "contract": "0xDF9f42AE4f81F086F8495c5a5339dDaa90057993",
+ "batchId": 460,
+ "agentId": 2,
+ "track": "positions",
+ "txHash": "0xa2c9b7db9801fdaee43823ef7e23929e7f6512618f6b19320e25debf8e501c58",
+ "sealBlock": 80114285,
+ "entryTs": 1794799040,
+ "exitTs": 1794813440,
+ "horizon": 14400,
+ "source": {
+  "url": "https://smt-weex-trading-bot.jannet-ekka.workers.dev/account.json",
+  "fetchedAt": "2026-11-16T03:17:10.990Z",
+  "sourceTs": 1794795150,
+  "snapshotHash": "0xbb80e5f5ad5b5ae90dc6b76b7b6935807b021e3f754f45c1b0c2225b2c4b09a8",
+  "raw": "{\"ADA\":{\"action\":\"WAIT\",\"as_of\":\"2026-11-16T02:12:30+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"BNB\":{\"action\":\"WAIT\",\"as_of\":\"2026-11-16T02:12:30+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"BTC\":{\"action\":\"WAIT\",\"as_of\":\"2026-11-16T02:12:30+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"DOGE\":{\"action\":\"WAIT\",\"as_of\":\"2026-11-16T02:12:30+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"ETH\":{\"action\":\"WAIT\",\"as_of\":\"2026-11-16T02:12:30+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"LTC\":{\"action\":\"WAIT\",\"as_of\":\"2026-11-16T02:12:30+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"SOL\":{\"action\":\"WAIT\",\"as_of\":\"2026-11-16T02:12:30+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"XRP\":{\"action\":\"WAIT\",\"as_of\":\"2026-11-16T02:12:30+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"}}"
+ },
+ "receipts": [
+  {
+   "pair": "BTC",
+   "dir": 0,
+   "confBps": 0,
+   "reasonHash": "0xda1f9b67aaacc5c9d987aaf74fb507176a1d07d808f09b8c9569e5a1fc734bae",
+   "canonical": "{\"call\":{\"action\":\"WAIT\",\"as_of\":\"2026-11-16T02:12:30+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"pair\":\"BTC\"}"
+  },
+  {
+   "pair": "ETH",
+   "dir": 0,
+   "confBps": 0,
+   "reasonHash": "0x0df199e7ea7cf3aa33a65dbf69aeb5eeb066fdfab60b56bcd93a09ca081cae90",
+   "canonical": "{\"call\":{\"action\":\"WAIT\",\"as_of\":\"2026-11-16T02:12:30+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"pair\":\"ETH\"}"
+  },
+  {
+   "pair": "SOL",
+   "dir": 0,
+   "confBps": 0,
+   "reasonHash": "0xccb6a46fdaa975f919ba8346f38c62dd5a745fd2f1d4ff76ae8cd61d7cc5fe84",
+   "canonical": "{\"call\":{\"action\":\"WAIT\",\"as_of\":\"2026-11-16T02:12:30+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"pair\":\"SOL\"}"
+  },
+  {
+   "pair": "BNB",
+   "dir": 0,
+   "confBps": 0,
+   "reasonHash": "0x3af934a627f7fb6f54e8314bc1a6799834065d336492daf3472fef7e73d13cab",
+   "canonical": "{\"call\":{\"action\":\"WAIT\",\"as_of\":\"2026-11-16T02:12:30+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"pair\":\"BNB\"}"
+  },
+  {
+   "pair": "XRP",
+   "dir": 0,
+   "confBps": 0,
+   "reasonHash": "0xdae3b126fc2b8b1543dae8874d33fcfbf4dc6a475dc6df26c27ceb442bbaa21a",
+   "canonical": "{\"call\":{\"action\":\"WAIT\",\"as_of\":\"2026-11-16T02:12:30+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"pair\":\"XRP\"}"
+  },
+  {
+   "pair": "DOGE",
+   "dir": 0,
+   "confBps": 0,
+   "reasonHash": "0x98f3e6d806502b6d8e7a5422528ce4e2a3be7c2ab48fb4e12a0d6aaf22324b7b",
+   "canonical": "{\"call\":{\"action\":\"WAIT\",\"as_of\":\"2026-11-16T02:12:30+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"pair\":\"DOGE\"}"
+  },
+  {
+   "pair": "LTC",
+   "dir": 0,
+   "confBps": 0,
+   "reasonHash": "0xee60fe260c6e2185deda8348b3b94f08227fdc12c76674a17c8200e002ebee36",
+   "canonical": "{\"call\":{\"action\":\"WAIT\",\"as_of\":\"2026-11-16T02:12:30+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"pair\":\"LTC\"}"
+  },
+  {
+   "pair": "ADA",
+   "dir": 0,
+   "confBps": 0,
+   "reasonHash": "0x97812ee84dc91a2338c56a4f8290ab0cab4144b7452ba02dd14f6e733cc0501a",
+   "canonical": "{\"call\":{\"action\":\"WAIT\",\"as_of\":\"2026-11-16T02:12:30+00:00\",\"conf\":0,\"positions\":[],\"why\":\"no live position\"},\"pair\":\"ADA\"}"
+  }
+ ]
+}
